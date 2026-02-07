@@ -1,11 +1,33 @@
-// ===== Task Journal Application =====
+// ===== Task Journal Application - Firebase Edition =====
+
+// ============================================================
+// FIREBASE CONFIG - PASTE YOUR CONFIG HERE
+// Go to https://console.firebase.google.com → Create project →
+// Build → Realtime Database → Create (test mode) →
+// Project Settings → Add web app → Copy config
+// ============================================================
+const firebaseConfig = {
+    apiKey: "PASTE_HERE",
+    authDomain: "PASTE_HERE",
+    databaseURL: "PASTE_HERE",
+    projectId: "PASTE_HERE",
+    storageBucket: "PASTE_HERE",
+    messagingSenderId: "PASTE_HERE",
+    appId: "PASTE_HERE"
+};
+// ============================================================
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const tasksRef = db.ref('tasks');
 
 // State
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let tasks = [];
 let editingId = null;
 let deleteId = null;
 let currentFilter = 'all';
-let currentSort = 'none'; // 'none' | 'priority-desc' | 'priority-asc'
+let currentSort = 'none';
 const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 let loggedInUser = sessionStorage.getItem('loggedInUser') || null;
 
@@ -32,7 +54,7 @@ const searchInput = document.getElementById('searchInput');
 const deleteModal = document.getElementById('deleteModal');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
-// Maps (dynamic - updated by language)
+// Maps
 const workTypeLabels = { DT: 'DT', GEO: 'GEO' };
 
 function getPriorityLabel(key) {
@@ -43,6 +65,60 @@ function getPriorityLabel(key) {
 function getStatusLabel(key) {
     const map = { working: 'status_working', waiting: 'status_waiting', completed: 'status_completed' };
     return T(map[key] || 'status_working');
+}
+
+// ===== FIREBASE REAL-TIME LISTENER =====
+// This listens for ANY change in the database and auto-updates the UI
+
+function startFirebaseListener() {
+    tasksRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        tasks = [];
+        if (data) {
+            // Convert Firebase object { key: task } to array
+            Object.keys(data).forEach(key => {
+                const task = data[key];
+                task.firebaseKey = key;
+                if (!task.id) task.id = key;
+                tasks.push(task);
+            });
+            // Sort newest first by default
+            tasks.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        }
+        renderTasks();
+        updateStats();
+    });
+}
+
+// ===== FIREBASE CRUD =====
+
+function saveTaskToFirebase(task) {
+    if (task.firebaseKey) {
+        // Update existing
+        const key = task.firebaseKey;
+        const taskData = { ...task };
+        delete taskData.firebaseKey;
+        return tasksRef.child(key).set(taskData);
+    } else {
+        // New task
+        const taskData = { ...task };
+        delete taskData.firebaseKey;
+        return tasksRef.push(taskData);
+    }
+}
+
+function deleteTaskFromFirebase(id) {
+    const task = getTaskById(id);
+    if (task && task.firebaseKey) {
+        return tasksRef.child(task.firebaseKey).remove();
+    }
+}
+
+function updateTaskInFirebase(id, updates) {
+    const task = getTaskById(id);
+    if (task && task.firebaseKey) {
+        return tasksRef.child(task.firebaseKey).update(updates);
+    }
 }
 
 // ===== LOGIN =====
@@ -71,10 +147,8 @@ function showApp() {
     loginOverlay.classList.add('hidden');
     appContainer.style.display = 'block';
     loggedUserNameEl.textContent = loggedInUser;
-    migrateTasks();
     setDefaultDate();
-    renderTasks();
-    updateStats();
+    startFirebaseListener();
     setupFilterButtons();
 }
 
@@ -87,18 +161,7 @@ function logout() {
     loginNameInput.focus();
 }
 
-// ===== MIGRATION =====
-
-function migrateTasks() {
-    let changed = false;
-    tasks.forEach(task => {
-        if (!task.priority) { task.priority = 'medium'; changed = true; }
-        if (!task.status) { task.status = task.endDate ? 'completed' : 'working'; changed = true; }
-        if (!task.updatedBy) { task.updatedBy = task.workerName || ''; changed = true; }
-        if (!task.workType) { task.workType = 'DT'; changed = true; }
-    });
-    if (changed) saveTasks();
-}
+// ===== UTILS =====
 
 function setDefaultDate() {
     const today = new Date().toISOString().split('T')[0];
@@ -125,9 +188,9 @@ taskForm.addEventListener('submit', (e) => {
         updatedBy: loggedInUser
     };
 
-    if (editingId) {
-        const index = tasks.findIndex(t => t.id === editingId);
-        if (index !== -1) tasks[index] = task;
+    if (editingId && existingTask) {
+        task.firebaseKey = existingTask.firebaseKey;
+        saveTaskToFirebase(task);
         editingId = null;
         submitBtn.innerHTML = `
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -136,11 +199,10 @@ taskForm.addEventListener('submit', (e) => {
         cancelEditBtn.style.display = 'none';
         showToast(T('toast_updated'), 'success');
     } else {
-        tasks.unshift(task);
+        saveTaskToFirebase(task);
         showToast(T('toast_added'), 'success');
     }
 
-    saveTasks(); renderTasks(); updateStats();
     taskForm.reset(); setDefaultDate(); statusInput.value = 'working';
 });
 
@@ -183,8 +245,8 @@ function deleteTask(id) { deleteId = id; deleteModal.classList.add('visible'); }
 
 confirmDeleteBtn.addEventListener('click', () => {
     if (deleteId) {
-        tasks = tasks.filter(t => t.id !== deleteId);
-        saveTasks(); renderTasks(); updateStats(); closeDeleteModal();
+        deleteTaskFromFirebase(deleteId);
+        closeDeleteModal();
         showToast(T('toast_deleted'), 'error');
     }
 });
@@ -197,13 +259,16 @@ deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) clo
 function changeStatus(id, newStatus) {
     const task = getTaskById(id);
     if (!task) return;
-    task.status = newStatus;
-    task.updatedAt = new Date().toISOString();
-    task.updatedBy = loggedInUser;
+    const updates = {
+        status: newStatus,
+        updatedAt: new Date().toISOString(),
+        updatedBy: loggedInUser
+    };
     if (newStatus === 'completed' && !task.endDate) {
-        task.endDate = new Date().toISOString().split('T')[0];
+        updates.endDate = new Date().toISOString().split('T')[0];
     }
-    saveTasks(); renderTasks(); updateStats(); closeAllDropdowns();
+    updateTaskInFirebase(id, updates);
+    closeAllDropdowns();
     showToast(`${T('toast_status_changed')}${getStatusLabel(newStatus)}`, 'success');
 }
 
@@ -298,7 +363,6 @@ function getFilteredTasks() {
     else if (currentFilter === 'waiting') filtered = filtered.filter(t => t.status === 'waiting');
     else if (currentFilter === 'completed') filtered = filtered.filter(t => t.status === 'completed');
 
-    // Sort by priority
     if (currentSort === 'priority-desc') {
         filtered.sort((a, b) => (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2));
     } else if (currentSort === 'priority-asc') {
@@ -393,7 +457,6 @@ function exportToCSV() {
 
 function generateId() { return 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
 function getTaskById(id) { return tasks.find(t => t.id === id); }
-function saveTasks() { localStorage.setItem('tasks', JSON.stringify(tasks)); }
 
 function formatDate(s) {
     if (!s) return '';
