@@ -7,13 +7,14 @@
 // Project Settings → Add web app → Copy config
 // ============================================================
 const firebaseConfig = {
-    apiKey: "PASTE_HERE",
-    authDomain: "PASTE_HERE",
-    databaseURL: "PASTE_HERE",
-    projectId: "PASTE_HERE",
-    storageBucket: "PASTE_HERE",
-    messagingSenderId: "PASTE_HERE",
-    appId: "PASTE_HERE"
+    apiKey: "AIzaSyAOOday74nCyk27wF4CxlKmU3eVuMxQ8mA",
+    authDomain: "natan-tasks.firebaseapp.com",
+    databaseURL: "https://natan-tasks-default-rtdb.firebaseio.com",
+    projectId: "natan-tasks",
+    storageBucket: "natan-tasks.firebasestorage.app",
+    messagingSenderId: "201676458373",
+    appId: "1:201676458373:web:1bf76fdc27d14651b19cec",
+    measurementId: "G-463031CGSR"
 };
 // ============================================================
 
