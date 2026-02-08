@@ -913,6 +913,13 @@ tr[draggable="true"] {
     cursor: pointer;
     color: var(--gray-700);
 }
+.summary-export-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem !important;
+    padding: 7px 14px !important;
+}
 .summary-close {
     width: 32px !important;
     height: 32px;

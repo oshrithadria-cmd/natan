@@ -116,6 +116,7 @@ const translations = {
         summary_time: 'זמן עבודה',
         summary_no_data: 'אין נתונים להצגה',
         summary_all_workers: 'כל העובדים',
+        summary_export: 'ייצוא סיכום לאקסל',
     },
 
     en: {
@@ -220,6 +221,7 @@ const translations = {
         summary_time: 'Work Time',
         summary_no_data: 'No data to display',
         summary_all_workers: 'All Workers',
+        summary_export: 'Export Summary to Excel',
     },
 
     ru: {
@@ -324,6 +326,7 @@ const translations = {
         summary_time: 'Время работы',
         summary_no_data: 'Нет данных для отображения',
         summary_all_workers: 'Все работники',
+        summary_export: 'Экспорт сводки в Excel',
     },
 
     am: {
@@ -428,6 +431,7 @@ const translations = {
         summary_time: 'የስራ ጊዜ',
         summary_no_data: 'ምንም መረጃ የለም',
         summary_all_workers: 'ሁሉም ሰራተኞች',
+        summary_export: 'ማጠቃለያ ወደ ኤክሴል ላክ',
     }
 };
 

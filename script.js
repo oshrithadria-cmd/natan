@@ -973,3 +973,111 @@ function renderSummary() {
         tbody.appendChild(tr);
     });
 }
+
+// ===== EXPORT SUMMARY TO CSV =====
+
+function exportSummaryToCSV() {
+    const workerSelect = document.getElementById('summaryWorkerSelect');
+    const selectedWorker = workerSelect.value;
+
+    let relevantTasks = tasks;
+    if (selectedWorker !== 'all') {
+        relevantTasks = tasks.filter(t => t.workerName === selectedWorker);
+    }
+
+    if (relevantTasks.length === 0) {
+        showToast(T('toast_export_empty'), 'error');
+        return;
+    }
+
+    const now = new Date();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayOfWeek = now.getDay();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Build per-worker per-project data with period breakdowns
+    const data = {};
+    relevantTasks.forEach(task => {
+        const worker = task.workerName || '?';
+        const project = task.projectNumber || '?';
+        const key = `${worker}|||${project}`;
+        if (!data[key]) {
+            data[key] = { worker, project, day: 0, week: 0, month: 0, total: 0 };
+        }
+        data[key].day += calcWorkSecondsInRange(task, dayStart, now);
+        data[key].week += calcWorkSecondsInRange(task, weekStart, now);
+        data[key].month += calcWorkSecondsInRange(task, monthStart, now);
+        data[key].total += calcTaskSeconds(task).workSeconds;
+    });
+
+    const BOM = '\uFEFF';
+    const headers = [
+        T('summary_worker'),
+        T('summary_project'),
+        T('summary_day'),
+        T('summary_week'),
+        T('summary_month'),
+        T('summary_total')
+    ];
+
+    let csv = BOM + headers.map(h => `"${h}"`).join(',') + '\n';
+
+    // Data rows
+    const workerTotals = {};
+    Object.values(data).sort((a, b) => a.worker.localeCompare(b.worker) || a.project.localeCompare(b.project)).forEach(r => {
+        csv += [
+            `"${r.worker}"`,
+            `"${r.project}"`,
+            `"${formatDuration(Math.round(r.day / 60))}"`,
+            `"${formatDuration(Math.round(r.week / 60))}"`,
+            `"${formatDuration(Math.round(r.month / 60))}"`,
+            `"${formatDuration(Math.round(r.total / 60))}"`
+        ].join(',') + '\n';
+
+        // Accumulate worker totals
+        if (!workerTotals[r.worker]) {
+            workerTotals[r.worker] = { day: 0, week: 0, month: 0, total: 0 };
+        }
+        workerTotals[r.worker].day += r.day;
+        workerTotals[r.worker].week += r.week;
+        workerTotals[r.worker].month += r.month;
+        workerTotals[r.worker].total += r.total;
+    });
+
+    // Add empty row separator
+    csv += '\n';
+
+    // Add worker totals section
+    csv += [
+        `"${T('summary_worker')}"`,
+        `"${T('summary_total')}"`,
+        `"${T('summary_day')}"`,
+        `"${T('summary_week')}"`,
+        `"${T('summary_month')}"`,
+        `"${T('summary_total')}"`
+    ].join(',') + '\n';
+
+    Object.keys(workerTotals).sort().forEach(worker => {
+        const wt = workerTotals[worker];
+        csv += [
+            `"${worker}"`,
+            `""`,
+            `"${formatDuration(Math.round(wt.day / 60))}"`,
+            `"${formatDuration(Math.round(wt.week / 60))}"`,
+            `"${formatDuration(Math.round(wt.month / 60))}"`,
+            `"${formatDuration(Math.round(wt.total / 60))}"`
+        ].join(',') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const dateStr = now.toISOString().split('T')[0];
+    const workerLabel = selectedWorker === 'all' ? 'all' : selectedWorker;
+    link.setAttribute('href', URL.createObjectURL(blob));
+    link.setAttribute('download', `hours_summary_${workerLabel}_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(T('toast_export_ok'), 'success');
+}
