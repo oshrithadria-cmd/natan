@@ -74,23 +74,48 @@ function getStatusLabel(key) {
 // ===== FIREBASE REAL-TIME LISTENER =====
 // This listens for ANY change in the database and auto-updates the UI
 
+// Firebase converts arrays to objects with numeric keys - convert back
+function firebaseToArray(obj) {
+    if (Array.isArray(obj)) return obj;
+    if (obj && typeof obj === 'object') {
+        const keys = Object.keys(obj);
+        if (keys.length > 0 && keys.every(k => !isNaN(k))) {
+            return keys.sort((a, b) => Number(a) - Number(b)).map(k => obj[k]);
+        }
+    }
+    return [];
+}
+
 function startFirebaseListener() {
     tasksRef.on('value', (snapshot) => {
         const data = snapshot.val();
         tasks = [];
         if (data) {
-            // Convert Firebase object { key: task } to array
             Object.keys(data).forEach(key => {
                 const task = data[key];
                 task.firebaseKey = key;
                 if (!task.id) task.id = key;
+                // Convert statusHistory from Firebase object to array
+                if (task.statusHistory) {
+                    task.statusHistory = firebaseToArray(task.statusHistory);
+                }
                 tasks.push(task);
             });
-            // Sort newest first by default
-            tasks.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            // Sort by manual order first, then by creation date
+            tasks.sort((a, b) => {
+                const oA = typeof a.order === 'number' ? a.order : 999999;
+                const oB = typeof b.order === 'number' ? b.order : 999999;
+                if (oA !== oB) return oA - oB;
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            });
         }
         renderTasks();
         updateStats();
+        // Refresh summary if open
+        const summarySection = document.getElementById('summarySection');
+        if (summarySection && summarySection.style.display !== 'none') {
+            renderSummary();
+        }
     });
 }
 
@@ -153,6 +178,7 @@ function showApp() {
     loggedUserNameEl.textContent = loggedInUser;
     setDefaultDate();
     startFirebaseListener();
+    startTimeTrackingTimer();
     setupFilterButtons();
     setupUserFilterButtons();
     // Auto-select "My Tasks" on login
@@ -183,6 +209,7 @@ function setDefaultDate() {
 taskForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const existingTask = editingId ? getTaskById(editingId) : null;
+    const nowISO = new Date().toISOString();
     const task = {
         id: editingId || generateId(),
         workerName: workerNameInput.value.trim(),
@@ -193,12 +220,19 @@ taskForm.addEventListener('submit', (e) => {
         status: statusInput.value,
         startDate: startDateInput.value,
         endDate: endDateInput.value || null,
-        createdAt: existingTask ? existingTask.createdAt : new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        updatedBy: loggedInUser
+        order: existingTask ? (existingTask.order ?? 999999) : 0,
+        createdAt: existingTask ? existingTask.createdAt : nowISO,
+        updatedAt: nowISO,
+        updatedBy: loggedInUser,
+        statusHistory: existingTask ? (Array.isArray(existingTask.statusHistory) ? [...existingTask.statusHistory] : firebaseToArray(existingTask.statusHistory)) : [{ status: statusInput.value, timestamp: nowISO }]
     };
 
     if (editingId && existingTask) {
+        // If status changed during edit, add to history
+        if (existingTask.status !== statusInput.value) {
+            if (!task.statusHistory) task.statusHistory = [];
+            task.statusHistory.push({ status: statusInput.value, timestamp: nowISO });
+        }
         task.firebaseKey = existingTask.firebaseKey;
         saveTaskToFirebase(task);
         editingId = null;
@@ -269,10 +303,14 @@ deleteModal.addEventListener('click', (e) => { if (e.target === deleteModal) clo
 function changeStatus(id, newStatus) {
     const task = getTaskById(id);
     if (!task) return;
+    const nowISO = new Date().toISOString();
+    const history = Array.isArray(task.statusHistory) ? [...task.statusHistory] : firebaseToArray(task.statusHistory);
+    history.push({ status: newStatus, timestamp: nowISO });
     const updates = {
         status: newStatus,
-        updatedAt: new Date().toISOString(),
-        updatedBy: loggedInUser
+        updatedAt: nowISO,
+        updatedBy: loggedInUser,
+        statusHistory: history
     };
     if (newStatus === 'completed' && !task.endDate) {
         updates.endDate = new Date().toISOString().split('T')[0];
@@ -306,18 +344,35 @@ function renderTasks() {
     emptyState.classList.remove('visible');
     document.querySelector('.table-wrapper').style.display = 'block';
 
+    // Build per-worker numbering
+    const workerCounters = {};
+    const workerNumbers = [];
+    filtered.forEach(task => {
+        const name = task.workerName || '?';
+        workerCounters[name] = (workerCounters[name] || 0) + 1;
+        workerNumbers.push(workerCounters[name]);
+    });
+
     filtered.forEach((task, index) => {
         const row = document.createElement('tr');
         row.className = 'fade-in';
+        row.dataset.taskId = task.id;
+        row.draggable = true;
         const pClass = `priority-${task.priority || 'medium'}`;
         const pLabel = getPriorityLabel(task.priority);
         const sClass = `status-${task.status || 'working'}`;
         const sLabel = getStatusLabel(task.status);
         const wtClass = `worktype-${(task.workType || 'DT').toLowerCase()}`;
         const wtLabel = task.workType || 'DT';
+        const workerNum = `${escapeHtml(task.workerName)} ${workerNumbers[index]}`;
+        const timeInfo = calcTaskSeconds(task);
+        const workTimeHtml = formatTimeBadge(timeInfo.workSeconds, 'work', timeInfo.isWorking, task.id);
 
         row.innerHTML = `
-            <td class="row-number">${index + 1}</td>
+            <td class="row-number drag-handle" title="${T('tip_drag')}">
+                <span class="drag-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></span>
+                <span class="row-num-text">${workerNum}</span>
+            </td>
             <td><strong>${escapeHtml(task.workerName)}</strong></td>
             <td>${escapeHtml(task.projectNumber)}</td>
             <td><span class="worktype-badge ${wtClass}">${wtLabel}</span></td>
@@ -326,6 +381,7 @@ function renderTasks() {
             <td>${formatDate(task.startDate)}</td>
             <td>${task.endDate ? formatDate(task.endDate) : '<span style="color:var(--gray-400)">—</span>'}</td>
             <td><span class="status-badge ${sClass}">${sLabel}</span></td>
+            <td>${workTimeHtml}</td>
             <td>
                 <div class="updated-info">
                     <span class="updated-by">${task.updatedBy ? escapeHtml(task.updatedBy) : '—'}</span>
@@ -354,6 +410,124 @@ function renderTasks() {
             </td>`;
         tasksBody.appendChild(row);
     });
+
+    // Setup drag & drop on rows
+    setupDragAndDrop();
+}
+
+// ===== DRAG & DROP =====
+
+let dragSrcRow = null;
+
+function setupDragAndDrop() {
+    const rows = tasksBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        row.addEventListener('dragstart', handleDragStart);
+        row.addEventListener('dragover', handleDragOver);
+        row.addEventListener('dragenter', handleDragEnter);
+        row.addEventListener('dragleave', handleDragLeave);
+        row.addEventListener('drop', handleDrop);
+        row.addEventListener('dragend', handleDragEnd);
+    });
+}
+
+function handleDragStart(e) {
+    // If a column sort is active, reset it so manual drag order takes effect
+    if (sortColumn) {
+        sortColumn = null;
+        sortDirection = null;
+        updateAllSortIndicators();
+    }
+    dragSrcRow = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.taskId);
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const target = getClosestRow(e.target);
+    if (!target || target === dragSrcRow) return;
+
+    const rect = target.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    target.classList.remove('drag-over-top', 'drag-over-bottom');
+    if (e.clientY < midY) {
+        target.classList.add('drag-over-top');
+    } else {
+        target.classList.add('drag-over-bottom');
+    }
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+}
+
+function handleDragLeave(e) {
+    const target = getClosestRow(e.target);
+    if (target) target.classList.remove('drag-over-top', 'drag-over-bottom');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = getClosestRow(e.target);
+    if (!target || target === dragSrcRow) return;
+
+    const srcId = e.dataTransfer.getData('text/plain');
+    const destId = target.dataset.taskId;
+
+    // determine if dropping above or below
+    const rect = target.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const dropAbove = e.clientY < midY;
+
+    target.classList.remove('drag-over-top', 'drag-over-bottom');
+
+    // Reorder using the currently filtered list
+    const filtered = getFilteredTasks();
+    const srcIdx = filtered.findIndex(t => t.id === srcId);
+    let destIdx = filtered.findIndex(t => t.id === destId);
+
+    if (srcIdx === -1 || destIdx === -1 || srcIdx === destIdx) return;
+
+    // Remove src from array, then insert at new position
+    const movedTask = filtered.splice(srcIdx, 1)[0];
+    // Recalculate destIdx after splice
+    destIdx = filtered.findIndex(t => t.id === destId);
+    if (destIdx === -1) destIdx = filtered.length;
+    if (!dropAbove) destIdx += 1;
+    if (destIdx > filtered.length) destIdx = filtered.length;
+    filtered.splice(destIdx, 0, movedTask);
+
+    // Update order on all filtered tasks and save to Firebase
+    const updates = {};
+    filtered.forEach((task, i) => {
+        task.order = i;
+        if (task.firebaseKey) {
+            updates[task.firebaseKey + '/order'] = i;
+        }
+    });
+    // Also update in main tasks array
+    filtered.forEach(ft => {
+        const mainTask = tasks.find(t => t.id === ft.id);
+        if (mainTask) mainTask.order = ft.order;
+    });
+    // Batch update Firebase
+    tasksRef.update(updates);
+}
+
+function handleDragEnd() {
+    this.classList.remove('dragging');
+    tasksBody.querySelectorAll('tr').forEach(r => {
+        r.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+}
+
+function getClosestRow(el) {
+    while (el && el.tagName !== 'TR') el = el.parentElement;
+    return el;
 }
 
 // ===== FILTER & SEARCH =====
@@ -483,15 +657,21 @@ function animateNumber(id, target) {
 function exportToCSV() {
     if (tasks.length === 0) { showToast(T('toast_export_empty'), 'error'); return; }
     const BOM = '\uFEFF';
-    const headers = [T('th_num'), T('th_worker'), T('th_project'), T('th_worktype'), T('th_description'), T('th_priority'), T('th_start'), T('th_end'), T('th_status'), T('th_updated'), T('th_updated')];
-    const rows = tasks.map((t, i) => [
-        i + 1, t.workerName, t.projectNumber, t.workType || 'DT',
+    const headers = [T('th_num'), T('th_worker'), T('th_project'), T('th_worktype'), T('th_description'), T('th_priority'), T('th_start'), T('th_end'), T('th_status'), T('th_work_time'), T('th_updated'), T('th_updated')];
+    const exportCounters = {};
+    const rows = tasks.map((t, i) => {
+        exportCounters[t.workerName] = (exportCounters[t.workerName] || 0) + 1;
+        const timeInfo = calcTaskSeconds(t);
+        return [
+        `${t.workerName} ${exportCounters[t.workerName]}`, t.workerName, t.projectNumber, t.workType || 'DT',
         t.workDescription.replace(/"/g, '""'),
         getPriorityLabel(t.priority),
         formatDate(t.startDate), t.endDate ? formatDate(t.endDate) : '—',
         getStatusLabel(t.status),
+        formatDuration(Math.round(timeInfo.workSeconds / 60)),
         t.updatedBy || '—', t.updatedAt ? formatDateTime(t.updatedAt) : '—'
-    ]);
+    ];
+    });
     let csv = BOM + headers.join(',') + '\n';
     rows.forEach(r => { csv += r.map(c => `"${c}"`).join(',') + '\n'; });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -544,3 +724,252 @@ document.addEventListener('keydown', (e) => {
         closeAllDropdowns();
     }
 });
+
+// ===== PROJECT TIME TRACKING =====
+
+// Format minutes into readable full string (e.g., "2 ימים 5 שעות 30 דקות")
+function formatDuration(totalMinutes) {
+    if (totalMinutes <= 0) return '—';
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const mins = totalMinutes % 60;
+    let parts = [];
+    if (days > 0) parts.push(days + ' ' + T('time_days_full'));
+    if (hours > 0) parts.push(hours + ' ' + T('time_hours_full'));
+    if (mins > 0 || parts.length === 0) parts.push(mins + ' ' + T('time_minutes_full'));
+    return parts.join(' ');
+}
+
+// Format seconds into live clock string HH:MM:SS
+function formatLiveClock(totalSeconds) {
+    if (totalSeconds <= 0) return '00:00:00';
+    const days = Math.floor(totalSeconds / 86400);
+    const hrs = Math.floor((totalSeconds % 86400) / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = Math.floor(totalSeconds % 60);
+    const pad = n => String(n).padStart(2, '0');
+    if (days > 0) {
+        return `${days}${T('time_days_short')}${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+    }
+    return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+}
+
+// Calculate total seconds (more precise for live display)
+function calcTaskSeconds(task) {
+    const raw = task.statusHistory;
+    const history = Array.isArray(raw) ? raw : firebaseToArray(raw);
+    let workSeconds = 0;
+    let waitSeconds = 0;
+
+    if (!history || history.length === 0) {
+        return { workSeconds: 0, waitSeconds: 0, isWorking: false, isWaiting: false };
+    }
+
+    const now = new Date();
+    let isWorking = false;
+    let isWaiting = false;
+
+    for (let i = 0; i < history.length; i++) {
+        const entry = history[i];
+        const entryTime = new Date(entry.timestamp);
+        let endTime;
+        if (i < history.length - 1) {
+            endTime = new Date(history[i + 1].timestamp);
+        } else {
+            if (entry.status === 'completed') {
+                continue;
+            }
+            endTime = now;
+            if (entry.status === 'working') isWorking = true;
+            if (entry.status === 'waiting') isWaiting = true;
+        }
+        const diffSec = (endTime - entryTime) / 1000;
+
+        if (entry.status === 'working') {
+            workSeconds += diffSec;
+        } else if (entry.status === 'waiting') {
+            waitSeconds += diffSec;
+        }
+    }
+
+    return {
+        workSeconds: Math.max(0, Math.round(workSeconds)),
+        waitSeconds: Math.max(0, Math.round(waitSeconds)),
+        isWorking,
+        isWaiting
+    };
+}
+
+// Format time badge HTML
+function formatTimeBadge(seconds, type, isLive, taskId) {
+    const minutes = Math.round(seconds / 60);
+    if (seconds <= 0 && !isLive) {
+        return `<span class="time-badge time-badge-done" data-time-type="${type}" data-time-task="${taskId || ''}">—</span>`;
+    }
+    const liveClass = isLive ? ' time-live' : '';
+    const typeClass = type === 'work' ? 'time-badge-work' : 'time-badge-wait';
+    const displayText = isLive ? formatLiveClock(seconds) : formatDuration(minutes);
+    return `<span class="time-badge ${typeClass}${liveClass}" data-time-type="${type}" data-time-task="${taskId || ''}">${displayText}</span>`;
+}
+
+// Refresh live timers every second (only updates badge text, not full re-render)
+let timeTrackingInterval = null;
+function startTimeTrackingTimer() {
+    if (timeTrackingInterval) clearInterval(timeTrackingInterval);
+    timeTrackingInterval = setInterval(() => {
+        if (!loggedInUser) return;
+        updateLiveTimers();
+    }, 1000);
+}
+
+function updateLiveTimers() {
+    const liveBadges = document.querySelectorAll('.time-badge.time-live');
+    if (liveBadges.length === 0) return;
+
+    liveBadges.forEach(badge => {
+        const taskId = badge.dataset.timeTask;
+        const type = badge.dataset.timeType;
+        if (!taskId) return;
+        const task = getTaskById(taskId);
+        if (!task) return;
+        const timeInfo = calcTaskSeconds(task);
+        const seconds = type === 'work' ? timeInfo.workSeconds : timeInfo.waitSeconds;
+        badge.textContent = formatLiveClock(seconds);
+    });
+}
+
+// ===== SUMMARY DASHBOARD =====
+
+function toggleSummary() {
+    const section = document.getElementById('summarySection');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        renderSummary();
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+// Calculate working seconds for a task within a given time range
+function calcWorkSecondsInRange(task, rangeStart, rangeEnd) {
+    const raw = task.statusHistory;
+    const history = Array.isArray(raw) ? raw : firebaseToArray(raw);
+    let workSeconds = 0;
+
+    if (!history || history.length === 0) return 0;
+
+    const now = new Date();
+    for (let i = 0; i < history.length; i++) {
+        const entry = history[i];
+        if (entry.status !== 'working') continue;
+
+        const entryTime = new Date(entry.timestamp);
+        let endTime;
+        if (i < history.length - 1) {
+            endTime = new Date(history[i + 1].timestamp);
+        } else {
+            if (entry.status === 'completed') continue;
+            endTime = now;
+        }
+
+        // Clamp to range
+        const clampedStart = entryTime < rangeStart ? rangeStart : entryTime;
+        const clampedEnd = endTime > rangeEnd ? rangeEnd : endTime;
+        if (clampedStart < clampedEnd) {
+            workSeconds += (clampedEnd - clampedStart) / 1000;
+        }
+    }
+    return Math.max(0, Math.round(workSeconds));
+}
+
+function renderSummary() {
+    const workerSelect = document.getElementById('summaryWorkerSelect');
+    const selectedWorker = workerSelect.value;
+
+    // Filter tasks by selected worker
+    let relevantTasks = tasks;
+    if (selectedWorker !== 'all') {
+        relevantTasks = tasks.filter(t => t.workerName === selectedWorker);
+    }
+
+    const now = new Date();
+
+    // Day range: start of today
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayEnd = now;
+
+    // Week range: start of this week (Sunday)
+    const dayOfWeek = now.getDay(); // 0=Sunday
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+    const weekEnd = now;
+
+    // Month range: start of this month
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = now;
+
+    // Total range: all time
+    const allStart = new Date(2000, 0, 1);
+    const allEnd = now;
+
+    let dayTotal = 0, weekTotal = 0, monthTotal = 0, grandTotal = 0;
+
+    // Per-project breakdown: { workerName -> { projectNumber -> seconds } }
+    const perWorkerProject = {};
+
+    relevantTasks.forEach(task => {
+        const ds = calcWorkSecondsInRange(task, dayStart, dayEnd);
+        const ws = calcWorkSecondsInRange(task, weekStart, weekEnd);
+        const ms = calcWorkSecondsInRange(task, monthStart, monthEnd);
+        const ts = calcTaskSeconds(task).workSeconds;
+
+        dayTotal += ds;
+        weekTotal += ws;
+        monthTotal += ms;
+        grandTotal += ts;
+
+        // Per project
+        const worker = task.workerName || '?';
+        const project = task.projectNumber || '?';
+        if (!perWorkerProject[worker]) perWorkerProject[worker] = {};
+        if (!perWorkerProject[worker][project]) perWorkerProject[worker][project] = 0;
+        perWorkerProject[worker][project] += ts;
+    });
+
+    // Update period cards
+    document.getElementById('summaryDay').textContent = formatDuration(Math.round(dayTotal / 60));
+    document.getElementById('summaryWeek').textContent = formatDuration(Math.round(weekTotal / 60));
+    document.getElementById('summaryMonth').textContent = formatDuration(Math.round(monthTotal / 60));
+    document.getElementById('summaryTotal').textContent = formatDuration(Math.round(grandTotal / 60));
+
+    // Render per-project table
+    const tbody = document.getElementById('summaryProjectsBody');
+    tbody.innerHTML = '';
+
+    const rows = [];
+    Object.keys(perWorkerProject).sort().forEach(worker => {
+        const projects = perWorkerProject[worker];
+        Object.keys(projects).sort().forEach(project => {
+            const secs = projects[project];
+            if (secs > 0) {
+                rows.push({ worker, project, seconds: secs });
+            }
+        });
+    });
+
+    if (rows.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="3" style="text-align:center;color:var(--gray-400);padding:20px;">${T('summary_no_data')}</td>`;
+        tbody.appendChild(tr);
+        return;
+    }
+
+    rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${escapeHtml(r.worker)}</strong></td>
+            <td>${escapeHtml(r.project)}</td>
+            <td>${formatDuration(Math.round(r.seconds / 60))}</td>`;
+        tbody.appendChild(tr);
+    });
+}

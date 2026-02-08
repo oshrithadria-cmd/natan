@@ -192,10 +192,72 @@
                     <button class="user-filter-btn" data-user="אלון בנג'י">אלון בנג'י</button>
                     <button class="user-filter-btn" data-user="סאמר">סאמר</button>
                 </div>
-                <button class="btn btn-export" onclick="exportToCSV()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    <span data-i18n="btn_export">ייצוא לאקסל</span>
-                </button>
+                <div class="filter-actions">
+                    <button class="btn btn-summary" onclick="toggleSummary()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span data-i18n="summary_btn">סיכום שעות</span>
+                    </button>
+                    <button class="btn btn-export" onclick="exportToCSV()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span data-i18n="btn_export">ייצוא לאקסל</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Summary Dashboard -->
+            <section class="summary-section" id="summarySection" style="display:none;">
+                <div class="summary-header">
+                    <h2>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span data-i18n="summary_title">סיכום שעות עבודה</span>
+                    </h2>
+                    <div class="summary-controls">
+                        <select id="summaryWorkerSelect" onchange="renderSummary()">
+                            <option value="all" data-i18n-opt="summary_all_workers">כל העובדים</option>
+                            <option value="אשד">אשד</option>
+                            <option value="אושרית">אושרית</option>
+                            <option value="נתנאל">נתנאל</option>
+                            <option value="אלון בנג'י">אלון בנג'י</option>
+                            <option value="סאמר">סאמר</option>
+                        </select>
+                        <button class="btn btn-secondary summary-close" onclick="toggleSummary()">✕</button>
+                    </div>
+                </div>
+                <!-- Period totals -->
+                <div class="summary-period-cards">
+                    <div class="summary-card summary-card-day">
+                        <span class="summary-card-label" data-i18n="summary_day">היום</span>
+                        <span class="summary-card-value" id="summaryDay">—</span>
+                    </div>
+                    <div class="summary-card summary-card-week">
+                        <span class="summary-card-label" data-i18n="summary_week">השבוע</span>
+                        <span class="summary-card-value" id="summaryWeek">—</span>
+                    </div>
+                    <div class="summary-card summary-card-month">
+                        <span class="summary-card-label" data-i18n="summary_month">החודש</span>
+                        <span class="summary-card-value" id="summaryMonth">—</span>
+                    </div>
+                    <div class="summary-card summary-card-total">
+                        <span class="summary-card-label" data-i18n="summary_total">סה"כ</span>
+                        <span class="summary-card-value" id="summaryTotal">—</span>
+                    </div>
+                </div>
+                <!-- Per-project breakdown -->
+                <div class="summary-projects">
+                    <h3 data-i18n="summary_per_project">זמן לפי פרויקט</h3>
+                    <div class="summary-table-wrapper">
+                        <table class="summary-table">
+                            <thead>
+                                <tr>
+                                    <th data-i18n="summary_worker">עובד</th>
+                                    <th data-i18n="summary_project">פרויקט</th>
+                                    <th data-i18n="summary_time">זמן עבודה</th>
+                                </tr>
+                            </thead>
+                            <tbody id="summaryProjectsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- Table -->
@@ -212,6 +274,7 @@
                             <th class="sortable-th" data-sort="startDate" onclick="toggleSort('startDate')"><span data-i18n="th_start">תאריך קבלה</span><span class="sort-arrow"></span></th>
                             <th class="sortable-th" data-sort="endDate" onclick="toggleSort('endDate')"><span data-i18n="th_end">תאריך סיום</span><span class="sort-arrow"></span></th>
                             <th class="sortable-th" data-sort="status" onclick="toggleSort('status')"><span data-i18n="th_status">סטטוס</span><span class="sort-arrow"></span></th>
+                            <th data-i18n="th_work_time">זמן עבודה</th>
                             <th class="sortable-th" data-sort="updatedAt" onclick="toggleSort('updatedAt')"><span data-i18n="th_updated">עודכן אחרון</span><span class="sort-arrow"></span></th>
                             <th data-i18n="th_actions">פעולות</th>
                         </tr></thead>

@@ -96,6 +96,26 @@ const translations = {
         tip_edit: 'ערוך',
         tip_delete: 'מחק',
         tip_sort_priority: 'מיין לפי דחיפות',
+        tip_drag: 'גרור לשינוי סדר',
+        // Time Tracking
+        th_work_time: 'זמן עבודה',
+        time_days_short: 'י ',
+        time_days_full: 'ימים',
+        time_hours_full: 'שעות',
+        time_minutes_full: 'דקות',
+        // Summary Dashboard
+        summary_title: 'סיכום שעות עבודה',
+        summary_btn: 'סיכום שעות',
+        summary_per_project: 'זמן לפי פרויקט',
+        summary_day: 'היום',
+        summary_week: 'השבוע',
+        summary_month: 'החודש',
+        summary_total: 'סה"כ',
+        summary_worker: 'עובד',
+        summary_project: 'פרויקט',
+        summary_time: 'זמן עבודה',
+        summary_no_data: 'אין נתונים להצגה',
+        summary_all_workers: 'כל העובדים',
     },
 
     en: {
@@ -180,6 +200,26 @@ const translations = {
         tip_edit: 'Edit',
         tip_delete: 'Delete',
         tip_sort_priority: 'Sort by priority',
+        tip_drag: 'Drag to reorder',
+        // Time Tracking
+        th_work_time: 'Work Time',
+        time_days_short: 'd ',
+        time_days_full: 'days',
+        time_hours_full: 'hours',
+        time_minutes_full: 'minutes',
+        // Summary Dashboard
+        summary_title: 'Work Hours Summary',
+        summary_btn: 'Hours Summary',
+        summary_per_project: 'Time per Project',
+        summary_day: 'Today',
+        summary_week: 'This Week',
+        summary_month: 'This Month',
+        summary_total: 'Total',
+        summary_worker: 'Worker',
+        summary_project: 'Project',
+        summary_time: 'Work Time',
+        summary_no_data: 'No data to display',
+        summary_all_workers: 'All Workers',
     },
 
     ru: {
@@ -264,6 +304,26 @@ const translations = {
         tip_edit: 'Редактировать',
         tip_delete: 'Удалить',
         tip_sort_priority: 'Сортировать по приоритету',
+        tip_drag: 'Перетащите для изменения порядка',
+        // Time Tracking
+        th_work_time: 'Время работы',
+        time_days_short: 'д ',
+        time_days_full: 'дней',
+        time_hours_full: 'часов',
+        time_minutes_full: 'минут',
+        // Summary Dashboard
+        summary_title: 'Сводка рабочих часов',
+        summary_btn: 'Сводка часов',
+        summary_per_project: 'Время по проектам',
+        summary_day: 'Сегодня',
+        summary_week: 'На этой неделе',
+        summary_month: 'В этом месяце',
+        summary_total: 'Всего',
+        summary_worker: 'Работник',
+        summary_project: 'Проект',
+        summary_time: 'Время работы',
+        summary_no_data: 'Нет данных для отображения',
+        summary_all_workers: 'Все работники',
     },
 
     am: {
@@ -348,6 +408,26 @@ const translations = {
         tip_edit: 'አርትዕ',
         tip_delete: 'ሰርዝ',
         tip_sort_priority: 'በቅድሚያ ደርድር',
+        tip_drag: 'ለማስተካከል ይጎትቱ',
+        // Time Tracking
+        th_work_time: 'የስራ ጊዜ',
+        time_days_short: 'ቀ ',
+        time_days_full: 'ቀናት',
+        time_hours_full: 'ሰዓታት',
+        time_minutes_full: 'ደቂቃዎች',
+        // Summary Dashboard
+        summary_title: 'የስራ ሰዓት ማጠቃለያ',
+        summary_btn: 'ሰዓት ማጠቃለያ',
+        summary_per_project: 'በፕሮጀክት ጊዜ',
+        summary_day: 'ዛሬ',
+        summary_week: 'በዚህ ሳምንት',
+        summary_month: 'በዚህ ወር',
+        summary_total: 'ጠቅላላ',
+        summary_worker: 'ሰራተኛ',
+        summary_project: 'ፕሮጀክት',
+        summary_time: 'የስራ ጊዜ',
+        summary_no_data: 'ምንም መረጃ የለም',
+        summary_all_workers: 'ሁሉም ሰራተኞች',
     }
 };
 
