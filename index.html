@@ -36,10 +36,17 @@
             <p class="login-subtitle" data-i18n="login_subtitle">מעקב אחר עבודות ופרויקטי בנייה</p>
             <form id="loginForm" class="login-form">
                 <div class="login-input-group">
-                    <label for="loginName" data-i18n="login_label">הכנס את שמך לכניסה למערכת</label>
+                    <label for="loginName" data-i18n="login_label">בחר את שמך לכניסה למערכת</label>
                     <div class="login-input-wrapper">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        <input type="text" id="loginName" data-i18n-ph="login_placeholder" placeholder="השם המלא שלך..." required autocomplete="off">
+                        <select id="loginName" required>
+                            <option value="" disabled selected data-i18n-opt="login_placeholder">בחר שם...</option>
+                            <option value="אשד">אשד</option>
+                            <option value="אושרית">אושרית</option>
+                            <option value="נתנאל">נתנאל</option>
+                            <option value="אלון בנג'י">אלון בנג'י</option>
+                            <option value="סאמר">סאמר</option>
+                        </select>
                     </div>
                 </div>
                 <button type="submit" class="login-btn">

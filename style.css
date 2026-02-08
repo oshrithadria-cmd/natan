@@ -177,9 +177,14 @@ body {
     box-shadow: 0 0 0 3px rgba(217,119,6,0.12);
 }
 .login-input-wrapper svg { color: var(--gray-400); flex-shrink: 0; }
-.login-input-wrapper input {
+.login-input-wrapper input,
+.login-input-wrapper select {
     border: none; background: transparent; width: 100%; padding: 10px 0;
     font-family: inherit; font-size: 1rem; color: var(--gray-800); outline: none;
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+}
+.login-input-wrapper select option {
+    font-family: inherit; font-size: 1rem; padding: 8px;
 }
 
 .login-btn {
