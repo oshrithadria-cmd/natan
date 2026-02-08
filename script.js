@@ -28,6 +28,7 @@ let tasks = [];
 let editingId = null;
 let deleteId = null;
 let currentFilter = 'all';
+let currentUserFilter = 'all';
 let currentSort = 'none';
 const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 let loggedInUser = sessionStorage.getItem('loggedInUser') || null;
@@ -151,6 +152,12 @@ function showApp() {
     setDefaultDate();
     startFirebaseListener();
     setupFilterButtons();
+    setupUserFilterButtons();
+    // Auto-select "My Tasks" on login
+    currentUserFilter = 'mine';
+    document.querySelectorAll('.user-filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.user === 'mine');
+    });
 }
 
 function logout() {
@@ -364,6 +371,13 @@ function getFilteredTasks() {
     else if (currentFilter === 'waiting') filtered = filtered.filter(t => t.status === 'waiting');
     else if (currentFilter === 'completed') filtered = filtered.filter(t => t.status === 'completed');
 
+    // User filter
+    if (currentUserFilter === 'mine') {
+        filtered = filtered.filter(t => t.workerName === loggedInUser);
+    } else if (currentUserFilter !== 'all') {
+        filtered = filtered.filter(t => t.workerName === currentUserFilter);
+    }
+
     if (currentSort === 'priority-desc') {
         filtered.sort((a, b) => (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2));
     } else if (currentSort === 'priority-asc') {
@@ -385,6 +399,17 @@ function setupFilterButtons() {
 }
 
 searchInput.addEventListener('input', () => { renderTasks(); });
+
+function setupUserFilterButtons() {
+    document.querySelectorAll('.user-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.user-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentUserFilter = btn.dataset.user;
+            renderTasks();
+        });
+    });
+}
 
 // ===== SORT =====
 
