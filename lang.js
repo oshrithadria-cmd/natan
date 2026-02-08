@@ -117,6 +117,17 @@ const translations = {
         summary_no_data: 'אין נתונים להצגה',
         summary_all_workers: 'כל העובדים',
         summary_export: 'ייצוא סיכום לאקסל',
+        // Archive
+        view_active: 'משימות פעילות',
+        view_archive: 'ארכיון',
+        // Time Edit
+        tip_edit_time: 'תקן זמן ידנית',
+        time_edit_title: 'תיקון זמן עבודה',
+        time_edit_current: 'זמן נוכחי',
+        time_edit_hours: 'שעות',
+        time_edit_minutes: 'דקות',
+        time_edit_save: 'שמור',
+        toast_time_updated: 'הזמן עודכן בהצלחה',
     },
 
     en: {
@@ -222,6 +233,17 @@ const translations = {
         summary_no_data: 'No data to display',
         summary_all_workers: 'All Workers',
         summary_export: 'Export Summary to Excel',
+        // Archive
+        view_active: 'Active Tasks',
+        view_archive: 'Archive',
+        // Time Edit
+        tip_edit_time: 'Edit time manually',
+        time_edit_title: 'Edit Work Time',
+        time_edit_current: 'Current time',
+        time_edit_hours: 'Hours',
+        time_edit_minutes: 'Minutes',
+        time_edit_save: 'Save',
+        toast_time_updated: 'Time updated successfully',
     },
 
     ru: {
@@ -327,6 +349,17 @@ const translations = {
         summary_no_data: 'Нет данных для отображения',
         summary_all_workers: 'Все работники',
         summary_export: 'Экспорт сводки в Excel',
+        // Archive
+        view_active: 'Активные задачи',
+        view_archive: 'Архив',
+        // Time Edit
+        tip_edit_time: 'Изменить время вручную',
+        time_edit_title: 'Корректировка рабочего времени',
+        time_edit_current: 'Текущее время',
+        time_edit_hours: 'Часы',
+        time_edit_minutes: 'Минуты',
+        time_edit_save: 'Сохранить',
+        toast_time_updated: 'Время успешно обновлено',
     },
 
     am: {
@@ -432,6 +465,17 @@ const translations = {
         summary_no_data: 'ምንም መረጃ የለም',
         summary_all_workers: 'ሁሉም ሰራተኞች',
         summary_export: 'ማጠቃለያ ወደ ኤክሴል ላክ',
+        // Archive
+        view_active: 'ንቁ ተግባራት',
+        view_archive: 'ማህደር',
+        // Time Edit
+        tip_edit_time: 'ጊዜ በእጅ ያስተካክሉ',
+        time_edit_title: 'የስራ ጊዜ ማስተካከያ',
+        time_edit_current: 'አሁን ያለው ጊዜ',
+        time_edit_hours: 'ሰዓት',
+        time_edit_minutes: 'ደቂቃ',
+        time_edit_save: 'አስቀምጥ',
+        toast_time_updated: 'ጊዜ በተሳካ ሁኔታ ተዘምኗል',
     }
 };
 

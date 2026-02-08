@@ -177,11 +177,21 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     <input type="text" id="searchInput" data-i18n-ph="ph_search" placeholder="חיפוש לפי שם, פרויקט או תיאור...">
                 </div>
+                <div class="view-tabs">
+                    <button class="view-tab active" data-view="active" onclick="switchView('active')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span data-i18n="view_active">משימות פעילות</span>
+                    </button>
+                    <button class="view-tab" data-view="archive" onclick="switchView('archive')">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                        <span data-i18n="view_archive">ארכיון</span>
+                        <span class="archive-count" id="archiveCount">0</span>
+                    </button>
+                </div>
                 <div class="filter-buttons">
                     <button class="filter-btn active" data-filter="all" data-i18n="filter_all">הכל</button>
                     <button class="filter-btn" data-filter="working" data-i18n="filter_working">בעבודה</button>
                     <button class="filter-btn" data-filter="waiting" data-i18n="filter_waiting">בהמתנה</button>
-                    <button class="filter-btn" data-filter="completed" data-i18n="filter_completed">הושלמו</button>
                 </div>
                 <div class="user-filter-buttons">
                     <button class="user-filter-btn active" data-user="all" data-i18n="filter_all_users">כולם</button>
@@ -303,6 +313,29 @@
             <div class="modal-actions">
                 <button class="btn btn-danger" id="confirmDeleteBtn" data-i18n="btn_delete">מחק</button>
                 <button class="btn btn-secondary" onclick="closeDeleteModal()" data-i18n="btn_cancel">ביטול</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Edit Modal -->
+    <div class="modal-overlay" id="timeEditModal">
+        <div class="modal time-edit-modal">
+            <div class="modal-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <h3 data-i18n="time_edit_title">תיקון זמן עבודה</h3>
+            <p class="time-edit-current" id="timeEditCurrent"></p>
+            <div class="time-edit-inputs">
+                <div class="time-edit-group">
+                    <label data-i18n="time_edit_hours">שעות</label>
+                    <input type="number" id="timeEditHours" min="0" max="9999" value="0">
+                </div>
+                <div class="time-edit-group">
+                    <label data-i18n="time_edit_minutes">דקות</label>
+                    <input type="number" id="timeEditMinutes" min="0" max="59" value="0">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="confirmTimeEdit" data-i18n="time_edit_save">שמור</button>
+                <button class="btn btn-secondary" onclick="closeTimeEditModal()" data-i18n="btn_cancel">ביטול</button>
             </div>
         </div>
     </div>

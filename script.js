@@ -28,6 +28,7 @@ let tasks = [];
 let editingId = null;
 let deleteId = null;
 let currentFilter = 'all';
+let currentView = 'active'; // 'active' or 'archive'
 let currentUserFilter = 'all';
 let sortColumn = null;   // 'workerName', 'priority', 'startDate', etc.
 let sortDirection = null; // 'asc' or 'desc'
@@ -381,7 +382,14 @@ function renderTasks() {
             <td>${formatDate(task.startDate)}</td>
             <td>${task.endDate ? formatDate(task.endDate) : '<span style="color:var(--gray-400)">—</span>'}</td>
             <td><span class="status-badge ${sClass}">${sLabel}</span></td>
-            <td>${workTimeHtml}</td>
+            <td>
+                <div class="time-cell">
+                    ${workTimeHtml}
+                    <button class="time-edit-btn" onclick="openTimeEditModal('${task.id}')" title="${T('tip_edit_time')}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                </div>
+            </td>
             <td>
                 <div class="updated-info">
                     <span class="updated-by">${task.updatedBy ? escapeHtml(task.updatedBy) : '—'}</span>
@@ -534,6 +542,14 @@ function getClosestRow(el) {
 
 function getFilteredTasks() {
     let filtered = [...tasks];
+
+    // View filter: active vs archive
+    if (currentView === 'active') {
+        filtered = filtered.filter(t => t.status !== 'completed');
+    } else if (currentView === 'archive') {
+        filtered = filtered.filter(t => t.status === 'completed');
+    }
+
     const term = searchInput.value.trim().toLowerCase();
     if (term) {
         filtered = filtered.filter(t =>
@@ -604,6 +620,32 @@ function setupUserFilterButtons() {
     });
 }
 
+// ===== VIEW SWITCH (Active / Archive) =====
+
+function switchView(view) {
+    currentView = view;
+    document.querySelectorAll('.view-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.view === view);
+    });
+    // Update filter buttons visibility
+    const filterBtns = document.querySelector('.filter-buttons');
+    if (view === 'archive') {
+        filterBtns.style.display = 'none';
+    } else {
+        filterBtns.style.display = '';
+        // Reset to "all" filter
+        currentFilter = 'all';
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+    }
+    renderTasks();
+}
+
+function updateArchiveCount() {
+    const count = tasks.filter(t => t.status === 'completed').length;
+    const el = document.getElementById('archiveCount');
+    if (el) el.textContent = count;
+}
+
 // ===== SORT =====
 
 function toggleSort(column) {
@@ -634,10 +676,11 @@ function updateAllSortIndicators() {
 // ===== STATS =====
 
 function updateStats() {
-    animateNumber('totalTasks', tasks.length);
+    animateNumber('totalTasks', tasks.filter(t => t.status !== 'completed').length);
     animateNumber('workingTasks', tasks.filter(t => t.status === 'working').length);
     animateNumber('waitingTasks', tasks.filter(t => t.status === 'waiting').length);
     animateNumber('completedTasks', tasks.filter(t => t.status === 'completed').length);
+    updateArchiveCount();
 }
 
 function animateNumber(id, target) {
@@ -720,6 +763,8 @@ function showToast(message, type = 'success') {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (deleteModal.classList.contains('visible')) closeDeleteModal();
+        const timeModal = document.getElementById('timeEditModal');
+        if (timeModal && timeModal.classList.contains('visible')) closeTimeEditModal();
         if (editingId) cancelEdit();
         closeAllDropdowns();
     }
@@ -792,8 +837,11 @@ function calcTaskSeconds(task) {
         }
     }
 
+    // Apply manual time adjustment (in seconds, can be positive or negative)
+    const manualAdj = typeof task.manualTimeSeconds === 'number' ? task.manualTimeSeconds : 0;
+
     return {
-        workSeconds: Math.max(0, Math.round(workSeconds)),
+        workSeconds: Math.max(0, Math.round(workSeconds) + manualAdj),
         waitSeconds: Math.max(0, Math.round(waitSeconds)),
         isWorking,
         isWaiting
@@ -1081,3 +1129,77 @@ function exportSummaryToCSV() {
     document.body.removeChild(link);
     showToast(T('toast_export_ok'), 'success');
 }
+
+// ===== MANUAL TIME EDIT =====
+
+let timeEditTaskId = null;
+
+function openTimeEditModal(taskId) {
+    const task = getTaskById(taskId);
+    if (!task) return;
+    timeEditTaskId = taskId;
+
+    const timeInfo = calcTaskSeconds(task);
+    const totalMin = Math.round(timeInfo.workSeconds / 60);
+    const hours = Math.floor(totalMin / 60);
+    const mins = totalMin % 60;
+
+    document.getElementById('timeEditCurrent').textContent =
+        `${T('time_edit_current')}: ${formatDuration(totalMin)}`;
+    document.getElementById('timeEditHours').value = hours;
+    document.getElementById('timeEditMinutes').value = mins;
+    document.getElementById('timeEditModal').classList.add('visible');
+}
+
+function closeTimeEditModal() {
+    document.getElementById('timeEditModal').classList.remove('visible');
+    timeEditTaskId = null;
+}
+
+document.getElementById('timeEditModal').addEventListener('click', (e) => {
+    if (e.target.id === 'timeEditModal') closeTimeEditModal();
+});
+
+document.getElementById('confirmTimeEdit').addEventListener('click', () => {
+    if (!timeEditTaskId) return;
+    const task = getTaskById(timeEditTaskId);
+    if (!task) return;
+
+    const newHours = parseInt(document.getElementById('timeEditHours').value) || 0;
+    const newMinutes = parseInt(document.getElementById('timeEditMinutes').value) || 0;
+    const newTotalSeconds = (newHours * 3600) + (newMinutes * 60);
+
+    // Calculate the automatic work seconds (without manual adjustment)
+    const raw = task.statusHistory;
+    const history = Array.isArray(raw) ? raw : firebaseToArray(raw);
+    let autoWorkSeconds = 0;
+    const now = new Date();
+    if (history && history.length > 0) {
+        for (let i = 0; i < history.length; i++) {
+            const entry = history[i];
+            const entryTime = new Date(entry.timestamp);
+            let endTime;
+            if (i < history.length - 1) {
+                endTime = new Date(history[i + 1].timestamp);
+            } else {
+                if (entry.status === 'completed') continue;
+                endTime = now;
+            }
+            if (entry.status === 'working') {
+                autoWorkSeconds += (endTime - entryTime) / 1000;
+            }
+        }
+    }
+    autoWorkSeconds = Math.max(0, Math.round(autoWorkSeconds));
+
+    const manualTimeSeconds = newTotalSeconds - autoWorkSeconds;
+
+    updateTaskInFirebase(timeEditTaskId, {
+        manualTimeSeconds: manualTimeSeconds,
+        updatedAt: new Date().toISOString(),
+        updatedBy: loggedInUser
+    });
+
+    closeTimeEditModal();
+    showToast(T('toast_time_updated'), 'success');
+});

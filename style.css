@@ -918,3 +918,152 @@ tr[draggable="true"] {
     .summary-period-cards { grid-template-columns: repeat(2, 1fr); }
     .summary-header { flex-direction: column; align-items: flex-start; }
 }
+
+/* ===== VIEW TABS (Active / Archive) ===== */
+.view-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.view-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border: 2px solid var(--gray-200);
+    border-radius: 10px;
+    background: white;
+    color: var(--gray-500);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.view-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(59,130,246,0.05);
+}
+
+.view-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(59,130,246,0.25);
+}
+
+.view-tab.active svg {
+    stroke: white;
+}
+
+.archive-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 11px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(0,0,0,0.12);
+    color: inherit;
+}
+
+.view-tab.active .archive-count {
+    background: rgba(255,255,255,0.25);
+    color: white;
+}
+
+/* ===== TIME CELL ===== */
+.time-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.time-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    opacity: 0;
+}
+
+tr:hover .time-edit-btn {
+    opacity: 1;
+}
+
+.time-edit-btn:hover {
+    background: var(--primary);
+    color: white;
+    opacity: 1;
+}
+
+/* ===== TIME EDIT MODAL ===== */
+.time-edit-modal {
+    max-width: 380px;
+    text-align: center;
+}
+
+.time-edit-modal h3 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    color: var(--gray-800);
+}
+
+.time-edit-current {
+    margin: 0 0 18px;
+    font-size: 0.88rem;
+    color: var(--gray-500);
+}
+
+.time-edit-inputs {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.time-edit-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.time-edit-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.time-edit-group input {
+    width: 80px;
+    padding: 10px;
+    border: 2px solid var(--gray-200);
+    border-radius: 10px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--gray-800);
+    transition: border-color 0.2s;
+}
+
+.time-edit-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
