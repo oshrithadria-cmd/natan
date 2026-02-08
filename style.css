@@ -35,7 +35,7 @@
 
 body {
     font-family: 'Rubik', 'Noto Sans Ethiopic', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #292524;
+    background: #1a1a2e;
     min-height: 100vh;
     color: var(--gray-800);
     line-height: 1.6;
@@ -110,35 +110,19 @@ body {
 .login-bg {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(160deg, #1C1917 0%, #292524 30%, #3a302a 60%, #44403C 100%);
+    background: url('bg.png') center center / cover no-repeat;
     overflow: hidden;
 }
-
-.login-bg .concrete-texture {
+.login-bg::after {
+    content: '';
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image:
-        radial-gradient(ellipse at 20% 50%, rgba(120,113,108,0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(168,162,158,0.1) 0%, transparent 40%),
-        radial-gradient(ellipse at 50% 80%, rgba(120,113,108,0.12) 0%, transparent 50%);
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(3px);
 }
 
-.login-bg .rebar {
-    position: absolute;
-    background: linear-gradient(90deg, transparent, rgba(217,119,6,0.15), transparent);
-    height: 2px;
-}
-.login-bg .r1 { top: 15%; left: 0; width: 60%; }
-.login-bg .r2 { top: 40%; right: 0; width: 45%; }
-.login-bg .r3 { top: 65%; left: 10%; width: 55%; }
-.login-bg .r4 { top: 85%; right: 5%; width: 40%; }
+.login-bg .concrete-texture { display: none; }
 
-.login-bg .steel-beam {
-    position: absolute;
-    background: linear-gradient(180deg, transparent, rgba(107,114,128,0.1), transparent);
-    width: 3px;
-}
-.login-bg .sb1 { left: 20%; top: 0; height: 100%; }
-.login-bg .sb2 { right: 25%; top: 0; height: 100%; }
+.login-bg .rebar, .login-bg .steel-beam { display: none; }
 
 .login-card {
     position: relative;
@@ -201,134 +185,21 @@ body {
 }
 
 /* ===== CONSTRUCTION BACKGROUND ===== */
+/* ===== BACKGROUND IMAGE ===== */
 .bg-scene {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 0; overflow: hidden;
+    background: url('bg.png') center center / cover no-repeat;
 }
-
-.concrete-bg {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(170deg, #1C1917 0%, #292524 25%, #3a302a 50%, #44403C 75%, #292524 100%);
-}
-
-.concrete-bg::after {
+.bg-scene::after {
     content: '';
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image:
-        radial-gradient(circle at 15% 25%, rgba(120,113,108,0.12) 0%, transparent 40%),
-        radial-gradient(circle at 75% 60%, rgba(168,162,158,0.08) 0%, transparent 35%),
-        radial-gradient(circle at 40% 80%, rgba(120,113,108,0.1) 0%, transparent 30%);
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(2px);
 }
-
-.rebar-grid {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background:
-        repeating-linear-gradient(0deg, transparent, transparent 80px, rgba(217,119,6,0.04) 80px, rgba(217,119,6,0.04) 82px),
-        repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(217,119,6,0.04) 80px, rgba(217,119,6,0.04) 82px);
-}
-
-.grid-floor {
-    position: absolute; bottom: 0; left: 0; width: 100%; height: 35%;
-    background:
-        linear-gradient(90deg, rgba(120,113,108,0.06) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(120,113,108,0.06) 1px, transparent 1px);
-    background-size: 50px 50px;
-    transform: perspective(500px) rotateX(50deg);
-    transform-origin: bottom;
-    opacity: 0.7;
-}
-
-.building {
-    position: absolute; bottom: 0;
-    background: linear-gradient(180deg, #3a302a 0%, #292524 100%);
-    border-radius: 2px 2px 0 0;
-}
-.building::after {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background:
-        repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(217,119,6,0.06) 20px, rgba(217,119,6,0.06) 21px),
-        repeating-linear-gradient(90deg, transparent, transparent 24px, rgba(120,113,108,0.08) 24px, rgba(120,113,108,0.08) 25px);
-}
-.building::before {
-    content: '';
-    position: absolute; width: 3px; height: 3px;
-    background: rgba(217,119,6,0.5);
-    box-shadow:
-        10px 18px 0 rgba(251,191,36,0.3),
-        22px 8px 0 rgba(217,119,6,0.4),
-        6px 35px 0 rgba(251,191,36,0.4),
-        18px 50px 0 rgba(217,119,6,0.2),
-        3px 65px 0 rgba(251,191,36,0.3),
-        14px 78px 0 rgba(217,119,6,0.3),
-        26px 30px 0 rgba(251,191,36,0.2),
-        8px 90px 0 rgba(217,119,6,0.4);
-    top: 12%; left: 12%;
-    animation: windowFlicker 8s ease-in-out infinite;
-}
-
-.b1 { left: 2%; width: 55px; height: 30%; }
-.b2 { left: 10%; width: 75px; height: 48%; }
-.b3 { left: 22%; width: 45px; height: 25%; }
-.b4 { right: 3%; width: 65px; height: 38%; }
-.b5 { right: 14%; width: 85px; height: 52%; }
-.b6 { right: 28%; width: 40px; height: 28%; }
-
-.crane { position: absolute; bottom: 0; }
-.crane-1 { left: 35%; } .crane-2 { right: 38%; }
-.crane-tower {
-    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 5px; height: 280px;
-    background: linear-gradient(180deg, var(--primary), #44403C);
-    opacity: 0.35;
-}
-.crane-arm {
-    position: absolute; bottom: 270px; left: 50%;
-    width: 110px; height: 3px;
-    background: linear-gradient(90deg, var(--primary), transparent);
-    opacity: 0.35; transform-origin: left center;
-    animation: craneSwing 14s ease-in-out infinite;
-}
-.crane-2 .crane-arm { animation-delay: -7s; animation-duration: 16s; }
-.crane-cable {
-    position: absolute; bottom: 220px; left: calc(50% + 75px);
-    width: 2px; height: 50px;
-    background: rgba(217,119,6,0.2);
-    animation: craneSwing 14s ease-in-out infinite;
-    transform-origin: top center;
-}
-.crane-2 .crane-cable { animation-delay: -7s; animation-duration: 16s; }
-
-.particle {
-    position: absolute; border-radius: 50%; opacity: 0;
-    animation: floatUp 8s ease-in-out infinite;
-}
-.p1 { left: 8%; bottom: 18%; width: 3px; height: 3px; background: rgba(168,162,158,0.6); animation-delay: 0s; }
-.p2 { left: 22%; bottom: 12%; width: 2px; height: 2px; background: rgba(217,119,6,0.5); animation-delay: 1.5s; }
-.p3 { left: 48%; bottom: 22%; width: 4px; height: 4px; background: rgba(168,162,158,0.4); animation-delay: 3s; }
-.p4 { left: 68%; bottom: 8%; width: 2px; height: 2px; background: rgba(217,119,6,0.4); animation-delay: 4.5s; }
-.p5 { left: 82%; bottom: 28%; width: 3px; height: 3px; background: rgba(168,162,158,0.5); animation-delay: 2s; }
-.p6 { left: 38%; bottom: 15%; width: 3px; height: 3px; background: rgba(251,191,36,0.4); animation-delay: 5s; }
-
-.bg-beam {
-    position: absolute;
-    background: linear-gradient(90deg, transparent, rgba(120,113,108,0.08), transparent);
-    height: 2px;
-}
-.beam1 { top: 22%; left: 0; width: 35%; }
-.beam2 { top: 48%; right: 0; width: 40%; }
-.beam3 { top: 72%; left: 8%; width: 30%; }
-
-@keyframes craneSwing { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
-@keyframes floatUp {
-    0% { opacity:0; transform: translateY(0) scale(1); }
-    20% { opacity:0.7; }
-    80% { opacity:0.4; }
-    100% { opacity:0; transform: translateY(-180px) scale(0.2); }
-}
-@keyframes windowFlicker {
-    0%,100% { opacity:1; } 30% { opacity:0.6; } 50% { opacity:1; } 70% { opacity:0.4; } 90% { opacity:0.8; }
-}
+/* Hide old animated elements */
+.concrete-bg, .grid-floor, .rebar-grid,
+.building, .crane, .particle, .bg-beam { display: none; }
 @keyframes modalIn { from { opacity:0; transform:scale(0.95) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
 
 /* ===== APP CONTAINER ===== */
