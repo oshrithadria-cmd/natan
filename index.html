@@ -204,15 +204,15 @@
                     <table id="tasksTable">
                         <thead><tr>
                             <th data-i18n="th_num">#</th>
-                            <th data-i18n="th_worker">שם העובד</th>
-                            <th data-i18n="th_project">מספר פרויקט</th>
-                            <th data-i18n="th_worktype">סוג עבודה</th>
+                            <th class="sortable-th" data-sort="workerName" onclick="toggleSort('workerName')"><span data-i18n="th_worker">שם העובד</span><span class="sort-arrow"></span></th>
+                            <th class="sortable-th" data-sort="projectNumber" onclick="toggleSort('projectNumber')"><span data-i18n="th_project">מספר פרויקט</span><span class="sort-arrow"></span></th>
+                            <th class="sortable-th" data-sort="workType" onclick="toggleSort('workType')"><span data-i18n="th_worktype">סוג עבודה</span><span class="sort-arrow"></span></th>
                             <th data-i18n="th_description">תיאור העבודה</th>
-                            <th id="thPriority" class="sortable-th" onclick="togglePrioritySort()" data-i18n-title="tip_sort_priority" title="מיין לפי דחיפות"><span data-i18n="th_priority">דחיפות</span><span class="sort-arrow"></span></th>
-                            <th data-i18n="th_start">תאריך קבלה</th>
-                            <th data-i18n="th_end">תאריך סיום</th>
-                            <th data-i18n="th_status">סטטוס</th>
-                            <th data-i18n="th_updated">עודכן אחרון</th>
+                            <th class="sortable-th" data-sort="priority" onclick="toggleSort('priority')"><span data-i18n="th_priority">דחיפות</span><span class="sort-arrow"></span></th>
+                            <th class="sortable-th" data-sort="startDate" onclick="toggleSort('startDate')"><span data-i18n="th_start">תאריך קבלה</span><span class="sort-arrow"></span></th>
+                            <th class="sortable-th" data-sort="endDate" onclick="toggleSort('endDate')"><span data-i18n="th_end">תאריך סיום</span><span class="sort-arrow"></span></th>
+                            <th class="sortable-th" data-sort="status" onclick="toggleSort('status')"><span data-i18n="th_status">סטטוס</span><span class="sort-arrow"></span></th>
+                            <th class="sortable-th" data-sort="updatedAt" onclick="toggleSort('updatedAt')"><span data-i18n="th_updated">עודכן אחרון</span><span class="sort-arrow"></span></th>
                             <th data-i18n="th_actions">פעולות</th>
                         </tr></thead>
                         <tbody id="tasksBody"></tbody>

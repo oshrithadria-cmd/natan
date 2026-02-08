@@ -29,8 +29,10 @@ let editingId = null;
 let deleteId = null;
 let currentFilter = 'all';
 let currentUserFilter = 'all';
-let currentSort = 'none';
+let sortColumn = null;   // 'workerName', 'priority', 'startDate', etc.
+let sortDirection = null; // 'asc' or 'desc'
 const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+const statusOrder = { working: 0, waiting: 1, completed: 2 };
 let loggedInUser = sessionStorage.getItem('loggedInUser') || null;
 
 // DOM Elements
@@ -378,10 +380,27 @@ function getFilteredTasks() {
         filtered = filtered.filter(t => t.workerName === currentUserFilter);
     }
 
-    if (currentSort === 'priority-desc') {
-        filtered.sort((a, b) => (priorityOrder[a.priority] || 2) - (priorityOrder[b.priority] || 2));
-    } else if (currentSort === 'priority-asc') {
-        filtered.sort((a, b) => (priorityOrder[b.priority] || 2) - (priorityOrder[a.priority] || 2));
+    // Sort
+    if (sortColumn && sortDirection) {
+        filtered.sort((a, b) => {
+            let valA, valB;
+            if (sortColumn === 'priority') {
+                valA = priorityOrder[a.priority] ?? 2;
+                valB = priorityOrder[b.priority] ?? 2;
+            } else if (sortColumn === 'status') {
+                valA = statusOrder[a.status] ?? 1;
+                valB = statusOrder[b.status] ?? 1;
+            } else if (sortColumn === 'startDate' || sortColumn === 'endDate' || sortColumn === 'updatedAt') {
+                valA = a[sortColumn] ? new Date(a[sortColumn]).getTime() : 0;
+                valB = b[sortColumn] ? new Date(b[sortColumn]).getTime() : 0;
+            } else {
+                valA = (a[sortColumn] || '').toString().toLowerCase();
+                valB = (b[sortColumn] || '').toString().toLowerCase();
+            }
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
     }
 
     return filtered;
@@ -413,25 +432,29 @@ function setupUserFilterButtons() {
 
 // ===== SORT =====
 
-function togglePrioritySort() {
-    if (currentSort === 'none') currentSort = 'priority-desc';
-    else if (currentSort === 'priority-desc') currentSort = 'priority-asc';
-    else currentSort = 'none';
-    updateSortIndicator();
+function toggleSort(column) {
+    if (sortColumn === column) {
+        if (sortDirection === 'desc') sortDirection = 'asc';
+        else if (sortDirection === 'asc') { sortColumn = null; sortDirection = null; }
+    } else {
+        sortColumn = column;
+        sortDirection = 'desc';
+    }
+    updateAllSortIndicators();
     renderTasks();
 }
 
-function updateSortIndicator() {
-    const th = document.getElementById('thPriority');
-    if (!th) return;
-    const arrow = th.querySelector('.sort-arrow');
-    if (!arrow) return;
-    arrow.classList.remove('sort-desc', 'sort-asc', 'sort-active');
-    if (currentSort === 'priority-desc') {
-        arrow.classList.add('sort-desc', 'sort-active');
-    } else if (currentSort === 'priority-asc') {
-        arrow.classList.add('sort-asc', 'sort-active');
-    }
+function updateAllSortIndicators() {
+    document.querySelectorAll('.sortable-th').forEach(th => {
+        const arrow = th.querySelector('.sort-arrow');
+        if (!arrow) return;
+        const col = th.dataset.sort;
+        arrow.classList.remove('sort-desc', 'sort-asc', 'sort-active');
+        if (col === sortColumn && sortDirection) {
+            arrow.classList.add('sort-active');
+            arrow.classList.add(sortDirection === 'desc' ? 'sort-desc' : 'sort-asc');
+        }
+    });
 }
 
 // ===== STATS =====
