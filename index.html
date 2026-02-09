@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>יומן ניהול משימות - בנייה</title>
-    <link rel="stylesheet" href="style.css?v=2.1">
+    <link rel="stylesheet" href="style.css?v=2.2">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -44,12 +44,17 @@
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         <select id="loginName" required>
                             <option value="" disabled selected data-i18n-opt="login_placeholder">בחר שם...</option>
-                            <option value="אשד">אשד</option>
-                            <option value="אושרית">אושרית</option>
-                            <option value="נתנאל">נתנאל</option>
-                            <option value="אלון בנג'י">אלון בנג'י</option>
-                            <option value="סאמר">סאמר</option>
                         </select>
+                    </div>
+                    <div class="add-name-section" id="addNameSection" style="display:none;">
+                        <div class="login-input-wrapper">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                            <input type="text" id="newUserName" data-i18n-ph="login_new_name_ph" placeholder="הכנס את שמך..." maxlength="30">
+                        </div>
+                        <button type="button" class="add-name-confirm-btn" onclick="confirmAddNewUser()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            <span data-i18n="login_add_confirm">אישור</span>
+                        </button>
                     </div>
                 </div>
                 <button type="submit" class="login-btn">
@@ -196,14 +201,9 @@
                     <button class="filter-btn" data-filter="working" data-i18n="filter_working">בעבודה</button>
                     <button class="filter-btn" data-filter="waiting" data-i18n="filter_waiting">בהמתנה</button>
                 </div>
-                <div class="user-filter-buttons">
+                <div class="user-filter-buttons" id="userFilterButtons">
                     <button class="user-filter-btn active" data-user="all" data-i18n="filter_all_users">כולם</button>
                     <button class="user-filter-btn my-tasks" data-user="mine" data-i18n="filter_my_tasks">המשימות שלי</button>
-                    <button class="user-filter-btn" data-user="אשד">אשד</button>
-                    <button class="user-filter-btn" data-user="אושרית">אושרית</button>
-                    <button class="user-filter-btn" data-user="נתנאל">נתנאל</button>
-                    <button class="user-filter-btn" data-user="אלון בנג'י">אלון בנג'י</button>
-                    <button class="user-filter-btn" data-user="סאמר">סאמר</button>
                 </div>
                 <div class="filter-actions">
                     <button class="btn btn-summary" onclick="toggleSummary()">
@@ -227,11 +227,6 @@
                     <div class="summary-controls">
                         <select id="summaryWorkerSelect" onchange="renderSummary()">
                             <option value="all" data-i18n-opt="summary_all_workers">כל העובדים</option>
-                            <option value="אשד">אשד</option>
-                            <option value="אושרית">אושרית</option>
-                            <option value="נתנאל">נתנאל</option>
-                            <option value="אלון בנג'י">אלון בנג'י</option>
-                            <option value="סאמר">סאמר</option>
                         </select>
                         <button class="btn btn-export summary-export-btn" onclick="exportSummaryToCSV()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -347,7 +342,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
-    <script src="lang.js?v=2.1"></script>
-    <script src="script.js?v=2.1"></script>
+    <script src="lang.js?v=2.2"></script>
+    <script src="script.js?v=2.2"></script>
 </body>
 </html>

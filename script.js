@@ -22,6 +22,11 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const tasksRef = db.ref('tasks');
+const usersRef = db.ref('users');
+
+// Default users (seeded on first load)
+const DEFAULT_USERS = ['אשד', 'אושרית', 'נתנאל', 'אלון בנג\'י', 'סאמר'];
+let allUsers = [];
 
 // State
 let tasks = [];
@@ -151,10 +156,146 @@ function updateTaskInFirebase(id, updates) {
     }
 }
 
+// ===== USER MANAGEMENT =====
+
+function startUsersListener() {
+    usersRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            allUsers = Object.values(data).sort((a, b) => a.localeCompare(b, 'he'));
+        } else {
+            // Seed default users on first run
+            seedDefaultUsers();
+            return;
+        }
+        rebuildUserLists();
+    });
+}
+
+function seedDefaultUsers() {
+    const usersObj = {};
+    DEFAULT_USERS.forEach((name, i) => usersObj['user_' + i] = name);
+    usersRef.set(usersObj);
+}
+
+function addUserToFirebase(name) {
+    const key = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+    return usersRef.child(key).set(name);
+}
+
+function rebuildUserLists() {
+    // 1) Login select
+    const loginSelect = document.getElementById('loginName');
+    const currentVal = loginSelect.value;
+    // Keep the placeholder + "add new" option
+    loginSelect.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.setAttribute('data-i18n-opt', 'login_placeholder');
+    placeholder.textContent = T('login_placeholder');
+    loginSelect.appendChild(placeholder);
+
+    allUsers.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        loginSelect.appendChild(opt);
+    });
+
+    // "Add new user" option
+    const addOpt = document.createElement('option');
+    addOpt.value = '__add_new__';
+    addOpt.textContent = '➕ ' + T('login_add_new');
+    loginSelect.appendChild(addOpt);
+
+    // Restore selection if it existed
+    if (currentVal && currentVal !== '__add_new__') loginSelect.value = currentVal;
+
+    // 2) User filter buttons
+    const container = document.getElementById('userFilterButtons');
+    if (container) {
+        // Keep "all" and "mine" buttons, remove the rest
+        const existingBtns = container.querySelectorAll('.user-filter-btn:not([data-user="all"]):not([data-user="mine"])');
+        existingBtns.forEach(b => b.remove());
+
+        allUsers.forEach(name => {
+            const btn = document.createElement('button');
+            btn.className = 'user-filter-btn';
+            btn.dataset.user = name;
+            btn.textContent = name;
+            if (currentUserFilter === name) btn.classList.add('active');
+            container.appendChild(btn);
+        });
+
+        // Re-setup click handlers
+        setupUserFilterButtons();
+    }
+
+    // 3) Summary worker select
+    const summarySelect = document.getElementById('summaryWorkerSelect');
+    if (summarySelect) {
+        const summaryVal = summarySelect.value;
+        summarySelect.innerHTML = '';
+        const allOpt = document.createElement('option');
+        allOpt.value = 'all';
+        allOpt.setAttribute('data-i18n-opt', 'summary_all_workers');
+        allOpt.textContent = T('summary_all_workers');
+        summarySelect.appendChild(allOpt);
+
+        allUsers.forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            summarySelect.appendChild(opt);
+        });
+
+        if (summaryVal) summarySelect.value = summaryVal;
+    }
+}
+
+// Handle login select change - show "add new" input
+document.getElementById('loginName').addEventListener('change', function() {
+    const addSection = document.getElementById('addNameSection');
+    if (this.value === '__add_new__') {
+        addSection.style.display = 'flex';
+        document.getElementById('newUserName').focus();
+    } else {
+        addSection.style.display = 'none';
+    }
+});
+
+function confirmAddNewUser() {
+    const input = document.getElementById('newUserName');
+    const name = input.value.trim();
+    if (!name) {
+        input.focus();
+        return;
+    }
+    // Check if already exists
+    if (allUsers.includes(name)) {
+        document.getElementById('loginName').value = name;
+        document.getElementById('addNameSection').style.display = 'none';
+        input.value = '';
+        return;
+    }
+    // Add to Firebase
+    addUserToFirebase(name).then(() => {
+        // The listener will rebuild the lists, then select the new name
+        setTimeout(() => {
+            document.getElementById('loginName').value = name;
+            document.getElementById('addNameSection').style.display = 'none';
+            input.value = '';
+        }, 500);
+    });
+}
+
 // ===== LOGIN =====
 
 document.addEventListener('DOMContentLoaded', () => {
     initLanguage();
+    startUsersListener();
     if (loggedInUser) {
         showApp();
     } else {
@@ -166,7 +307,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = loginNameInput.value.trim();
+    const selectVal = loginNameInput.value;
+    if (!selectVal || selectVal === '__add_new__') return;
+    const name = selectVal.trim();
     if (!name) return;
     loggedInUser = name;
     sessionStorage.setItem('loggedInUser', name);
