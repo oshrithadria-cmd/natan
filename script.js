@@ -165,9 +165,14 @@ function startUsersListener() {
             allUsers = Object.values(data).sort((a, b) => a.localeCompare(b, 'he'));
         } else {
             // Seed default users on first run
+            allUsers = [...DEFAULT_USERS];
             seedDefaultUsers();
-            return;
         }
+        rebuildUserLists();
+    }, (error) => {
+        // Firebase error - fallback to defaults so login still works
+        console.error('Users load error:', error);
+        allUsers = [...DEFAULT_USERS];
         rebuildUserLists();
     });
 }
