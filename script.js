@@ -1524,24 +1524,24 @@ function toggleCalendarSection() {
     }
 }
 
-function startCalendarListener() {
+function startVacationsListener() {
     if (calListenerStarted) return;
     calListenerStarted = true;
     vacationsRef.on('value', (snapshot) => {
         calVacations = snapshot.val() || {};
-        renderCalendar();
+        // Always update the weekly banner
         renderWeeklyBanner();
+        // Update calendar grid if it's visible
+        const calSection = document.getElementById('calendarSection');
+        if (calSection && calSection.style.display !== 'none') {
+            renderCalendar();
+        }
     });
 }
 
-function startWeeklyBannerListener() {
-    if (calListenerStarted) return;
-    vacationsRef.on('value', (snapshot) => {
-        calVacations = snapshot.val() || {};
-        calListenerStarted = true;
-        renderWeeklyBanner();
-    });
-}
+// Keep old names as aliases
+function startCalendarListener() { startVacationsListener(); }
+function startWeeklyBannerListener() { startVacationsListener(); }
 
 function renderWeeklyBanner() {
     const banner = document.getElementById('weeklyBanner');
