@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>יומן ניהול משימות - בנייה</title>
-    <link rel="stylesheet" href="style.css?v=2.3">
+    <link rel="stylesheet" href="style.css?v=2.5">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -128,24 +128,6 @@
                             <input type="text" id="projectNumber" data-i18n-ph="ph_project" placeholder="הכנס מספר פרויקט" required>
                         </div>
                         <div class="form-group">
-                            <label for="workType"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><span data-i18n="lbl_worktype">סוג עבודה</span></label>
-                            <select id="workType" required>
-                                <option value="" disabled selected data-i18n-opt="ph_worktype">בחר סוג עבודה</option>
-                                <option value="DT">DT</option>
-                                <option value="GEO">GEO</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="priority"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span data-i18n="lbl_priority">דחיפות פרויקט</span></label>
-                            <select id="priority" required>
-                                <option value="" disabled selected data-i18n-opt="ph_priority">בחר רמת דחיפות</option>
-                                <option value="critical" data-i18n-opt="opt_critical">קריטי - דרוש טיפול מיידי</option>
-                                <option value="high" data-i18n-opt="opt_high">גבוה - דחוף</option>
-                                <option value="medium" data-i18n-opt="opt_medium">בינוני - רגיל</option>
-                                <option value="low" data-i18n-opt="opt_low">נמוך - לא דחוף</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
                             <label for="status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span data-i18n="lbl_status">סטטוס משימה</span></label>
                             <select id="status" required>
                                 <option value="working" selected data-i18n-opt="opt_working">בעבודה</option>
@@ -214,6 +196,10 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         <span data-i18n="btn_export">ייצוא לאקסל</span>
                     </button>
+                    <button class="btn btn-files" onclick="toggleFilesSection()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <span data-i18n="btn_files">תוספי עזר</span>
+                    </button>
                 </div>
             </section>
 
@@ -272,6 +258,31 @@
                 </div>
             </section>
 
+            <!-- Files Section -->
+            <section class="files-section" id="filesSection" style="display:none;">
+                <div class="files-header">
+                    <h2>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <span data-i18n="files_title">תוספי עזר</span>
+                    </h2>
+                    <button class="btn btn-secondary summary-close" onclick="toggleFilesSection()">✕</button>
+                </div>
+                <div class="files-upload-area" id="filesUploadArea" style="display:none;">
+                    <label class="file-upload-label" for="fileInput">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span data-i18n="files_upload_text">לחץ להעלאת קובץ</span>
+                        <small data-i18n="files_upload_hint">PDF, Word, Excel, תמונות (עד 5MB)</small>
+                    </label>
+                    <input type="file" id="fileInput" style="display:none;" onchange="handleFileUpload(this)" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.txt,.csv">
+                </div>
+                <div class="files-list" id="filesList">
+                    <div class="files-empty" id="filesEmpty">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        <p data-i18n="files_empty">אין קבצים עדיין</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Table -->
             <section class="table-section">
                 <div class="table-wrapper">
@@ -280,9 +291,7 @@
                             <th data-i18n="th_num">#</th>
                             <th class="sortable-th" data-sort="workerName" onclick="toggleSort('workerName')"><span data-i18n="th_worker">שם העובד</span><span class="sort-arrow"></span></th>
                             <th class="sortable-th" data-sort="projectNumber" onclick="toggleSort('projectNumber')"><span data-i18n="th_project">מספר פרויקט</span><span class="sort-arrow"></span></th>
-                            <th class="sortable-th" data-sort="workType" onclick="toggleSort('workType')"><span data-i18n="th_worktype">סוג עבודה</span><span class="sort-arrow"></span></th>
                             <th data-i18n="th_description">תיאור העבודה</th>
-                            <th class="sortable-th" data-sort="priority" onclick="toggleSort('priority')"><span data-i18n="th_priority">דחיפות</span><span class="sort-arrow"></span></th>
                             <th class="sortable-th" data-sort="startDate" onclick="toggleSort('startDate')"><span data-i18n="th_start">תאריך קבלה</span><span class="sort-arrow"></span></th>
                             <th class="sortable-th" data-sort="endDate" onclick="toggleSort('endDate')"><span data-i18n="th_end">תאריך סיום</span><span class="sort-arrow"></span></th>
                             <th class="sortable-th" data-sort="status" onclick="toggleSort('status')"><span data-i18n="th_status">סטטוס</span><span class="sort-arrow"></span></th>
@@ -342,7 +351,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
-    <script src="lang.js?v=2.3"></script>
-    <script src="script.js?v=2.3"></script>
+    <script src="lang.js?v=2.5"></script>
+    <script src="script.js?v=2.5"></script>
 </body>
 </html>

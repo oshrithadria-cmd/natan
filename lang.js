@@ -131,6 +131,19 @@ const translations = {
         time_edit_minutes: 'דקות',
         time_edit_save: 'שמור',
         toast_time_updated: 'הזמן עודכן בהצלחה',
+        // Files
+        btn_files: 'תוספי עזר',
+        files_title: 'תוספי עזר',
+        files_upload_text: 'לחץ להעלאת קובץ',
+        files_upload_hint: 'PDF, Word, Excel, תמונות (עד 5MB)',
+        files_empty: 'אין קבצים עדיין',
+        files_download: 'הורדה',
+        files_uploaded: 'הקובץ הועלה בהצלחה',
+        files_upload_error: 'שגיאה בהעלאת הקובץ',
+        files_too_large: 'הקובץ גדול מדי (מקסימום 5MB)',
+        files_no_permission: 'אין לך הרשאה להעלות קבצים',
+        files_confirm_delete: 'האם למחוק את הקובץ?',
+        files_deleted: 'הקובץ נמחק',
     },
 
     en: {
@@ -250,6 +263,19 @@ const translations = {
         time_edit_minutes: 'Minutes',
         time_edit_save: 'Save',
         toast_time_updated: 'Time updated successfully',
+        // Files
+        btn_files: 'Resources',
+        files_title: 'Resources',
+        files_upload_text: 'Click to upload a file',
+        files_upload_hint: 'PDF, Word, Excel, Images (up to 5MB)',
+        files_empty: 'No files yet',
+        files_download: 'Download',
+        files_uploaded: 'File uploaded successfully',
+        files_upload_error: 'Error uploading file',
+        files_too_large: 'File is too large (max 5MB)',
+        files_no_permission: 'You do not have permission to upload files',
+        files_confirm_delete: 'Delete this file?',
+        files_deleted: 'File deleted',
     },
 
     ru: {
@@ -369,6 +395,19 @@ const translations = {
         time_edit_minutes: 'Минуты',
         time_edit_save: 'Сохранить',
         toast_time_updated: 'Время успешно обновлено',
+        // Files
+        btn_files: 'Ресурсы',
+        files_title: 'Ресурсы',
+        files_upload_text: 'Нажмите для загрузки файла',
+        files_upload_hint: 'PDF, Word, Excel, Изображения (до 5МБ)',
+        files_empty: 'Файлов пока нет',
+        files_download: 'Скачать',
+        files_uploaded: 'Файл успешно загружен',
+        files_upload_error: 'Ошибка загрузки файла',
+        files_too_large: 'Файл слишком большой (максимум 5МБ)',
+        files_no_permission: 'У вас нет разрешения на загрузку файлов',
+        files_confirm_delete: 'Удалить этот файл?',
+        files_deleted: 'Файл удален',
     },
 
     am: {
@@ -488,6 +527,19 @@ const translations = {
         time_edit_minutes: 'ደቂቃ',
         time_edit_save: 'አስቀምጥ',
         toast_time_updated: 'ጊዜ በተሳካ ሁኔታ ተዘምኗል',
+        // Files
+        btn_files: 'ተጨማሪ ሀብቶች',
+        files_title: 'ተጨማሪ ሀብቶች',
+        files_upload_text: 'ፋይል ለመጫን ጠቅ ያድርጉ',
+        files_upload_hint: 'PDF, Word, Excel, ምስሎች (እስከ 5MB)',
+        files_empty: 'ገና ፋይሎች የሉም',
+        files_download: 'አውርድ',
+        files_uploaded: 'ፋይሉ በተሳካ ሁኔታ ተጭኗል',
+        files_upload_error: 'ፋይል መጫን ስህተት',
+        files_too_large: 'ፋይሉ በጣም ትልቅ ነው (ከፍተኛ 5MB)',
+        files_no_permission: 'ፋይሎችን ለመጫን ፈቃድ የለዎትም',
+        files_confirm_delete: 'ይህን ፋይል ይሰርዙ?',
+        files_deleted: 'ፋይሉ ተሰርዟል',
     }
 };
 

@@ -23,6 +23,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const tasksRef = db.ref('tasks');
 const usersRef = db.ref('users');
+const filesRef = db.ref('files');
 
 // Default users (seeded on first load)
 const DEFAULT_USERS = ['אשד', 'אושרית', 'נתנאל', 'אלון בנג\'י', 'סאמר'];
@@ -50,11 +51,9 @@ const loggedUserNameEl = document.getElementById('loggedUserName');
 const taskForm = document.getElementById('taskForm');
 const workerNameInput = document.getElementById('workerName');
 const projectNumberInput = document.getElementById('projectNumber');
-const workTypeInput = document.getElementById('workType');
 const workDescriptionInput = document.getElementById('workDescription');
 const startDateInput = document.getElementById('startDate');
 const endDateInput = document.getElementById('endDate');
-const priorityInput = document.getElementById('priority');
 const statusInput = document.getElementById('status');
 const submitBtn = document.getElementById('submitBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
@@ -65,13 +64,6 @@ const deleteModal = document.getElementById('deleteModal');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
 // Maps
-const workTypeLabels = { DT: 'DT', GEO: 'GEO' };
-
-function getPriorityLabel(key) {
-    const map = { critical: 'priority_critical', high: 'priority_high', medium: 'priority_medium', low: 'priority_low' };
-    return T(map[key] || 'priority_medium');
-}
-
 function getStatusLabel(key) {
     const map = { working: 'status_working', waiting: 'status_waiting', completed: 'status_completed' };
     return T(map[key] || 'status_working');
@@ -363,9 +355,7 @@ taskForm.addEventListener('submit', (e) => {
         id: editingId || generateId(),
         workerName: workerNameInput.value.trim(),
         projectNumber: projectNumberInput.value.trim(),
-        workType: workTypeInput.value,
         workDescription: workDescriptionInput.value.trim(),
-        priority: priorityInput.value,
         status: statusInput.value,
         startDate: startDateInput.value,
         endDate: endDateInput.value || null,
@@ -407,9 +397,7 @@ function editTask(id) {
     editingId = id;
     workerNameInput.value = task.workerName;
     projectNumberInput.value = task.projectNumber;
-    workTypeInput.value = task.workType || 'DT';
     workDescriptionInput.value = task.workDescription;
-    priorityInput.value = task.priority || 'medium';
     statusInput.value = task.status || 'working';
     startDateInput.value = task.startDate;
     endDateInput.value = task.endDate || '';
@@ -504,15 +492,11 @@ function renderTasks() {
 
     filtered.forEach((task, index) => {
         const row = document.createElement('tr');
-        row.className = 'fade-in';
+        row.className = `fade-in row-status-${task.status || 'working'}`;
         row.dataset.taskId = task.id;
         row.draggable = true;
-        const pClass = `priority-${task.priority || 'medium'}`;
-        const pLabel = getPriorityLabel(task.priority);
         const sClass = `status-${task.status || 'working'}`;
         const sLabel = getStatusLabel(task.status);
-        const wtClass = `worktype-${(task.workType || 'DT').toLowerCase()}`;
-        const wtLabel = task.workType || 'DT';
         const workerNum = `${escapeHtml(task.workerName)} ${workerNumbers[index]}`;
         const timeInfo = calcTaskSeconds(task);
         const workTimeHtml = formatTimeBadge(timeInfo.workSeconds, 'work', timeInfo.isWorking, task.id);
@@ -524,9 +508,7 @@ function renderTasks() {
             </td>
             <td><strong>${escapeHtml(task.workerName)}</strong></td>
             <td>${escapeHtml(task.projectNumber)}</td>
-            <td><span class="worktype-badge ${wtClass}">${wtLabel}</span></td>
             <td class="task-description" title="${escapeHtml(task.workDescription)}">${escapeHtml(task.workDescription)}</td>
-            <td><span class="priority-badge ${pClass}">${pLabel}</span></td>
             <td>${formatDate(task.startDate)}</td>
             <td>${task.endDate ? formatDate(task.endDate) : '<span style="color:var(--gray-400)">—</span>'}</td>
             <td><span class="status-badge ${sClass}">${sLabel}</span></td>
@@ -703,8 +685,7 @@ function getFilteredTasks() {
         filtered = filtered.filter(t =>
             t.workerName.toLowerCase().includes(term) ||
             t.projectNumber.toLowerCase().includes(term) ||
-            t.workDescription.toLowerCase().includes(term) ||
-            (t.workType || '').toLowerCase().includes(term)
+            t.workDescription.toLowerCase().includes(term)
         );
     }
     if (currentFilter === 'working') filtered = filtered.filter(t => t.status === 'working');
@@ -848,15 +829,14 @@ function animateNumber(id, target) {
 function exportToCSV() {
     if (tasks.length === 0) { showToast(T('toast_export_empty'), 'error'); return; }
     const BOM = '\uFEFF';
-    const headers = [T('th_num'), T('th_worker'), T('th_project'), T('th_worktype'), T('th_description'), T('th_priority'), T('th_start'), T('th_end'), T('th_status'), T('th_work_time'), T('th_updated'), T('th_updated')];
+    const headers = [T('th_num'), T('th_worker'), T('th_project'), T('th_description'), T('th_start'), T('th_end'), T('th_status'), T('th_work_time'), T('th_updated'), T('th_updated')];
     const exportCounters = {};
     const rows = tasks.map((t, i) => {
         exportCounters[t.workerName] = (exportCounters[t.workerName] || 0) + 1;
         const timeInfo = calcTaskSeconds(t);
         return [
-        `${t.workerName} ${exportCounters[t.workerName]}`, t.workerName, t.projectNumber, t.workType || 'DT',
+        `${t.workerName} ${exportCounters[t.workerName]}`, t.workerName, t.projectNumber,
         t.workDescription.replace(/"/g, '""'),
-        getPriorityLabel(t.priority),
         formatDate(t.startDate), t.endDate ? formatDate(t.endDate) : '—',
         getStatusLabel(t.status),
         formatDuration(Math.round(timeInfo.workSeconds / 60)),
@@ -1351,3 +1331,165 @@ document.getElementById('confirmTimeEdit').addEventListener('click', () => {
     closeTimeEditModal();
     showToast(T('toast_time_updated'), 'success');
 });
+
+// ===== FILES / DOCUMENTS SECTION =====
+
+const FILES_ADMINS = ['נתנאל', 'אושרית'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+function isFilesAdmin() {
+    return FILES_ADMINS.includes(loggedInUser);
+}
+
+function toggleFilesSection() {
+    const section = document.getElementById('filesSection');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        // Show upload area only for admins
+        document.getElementById('filesUploadArea').style.display = isFilesAdmin() ? 'block' : 'none';
+        startFilesListener();
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+let filesListenerStarted = false;
+
+function startFilesListener() {
+    if (filesListenerStarted) return;
+    filesListenerStarted = true;
+    filesRef.orderByChild('uploadedAt').on('value', (snapshot) => {
+        const data = snapshot.val();
+        renderFiles(data);
+    });
+}
+
+function handleFileUpload(input) {
+    if (!isFilesAdmin()) {
+        showToast(T('files_no_permission'), 'error');
+        return;
+    }
+    const file = input.files[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+        showToast(T('files_too_large'), 'error');
+        input.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const base64 = e.target.result;
+        const fileData = {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            data: base64,
+            uploadedBy: loggedInUser,
+            uploadedAt: new Date().toISOString()
+        };
+        filesRef.push(fileData).then(() => {
+            showToast(T('files_uploaded'), 'success');
+            input.value = '';
+        }).catch(() => {
+            showToast(T('files_upload_error'), 'error');
+            input.value = '';
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function renderFiles(data) {
+    const list = document.getElementById('filesList');
+    const empty = document.getElementById('filesEmpty');
+
+    if (!data) {
+        list.innerHTML = '';
+        list.appendChild(empty);
+        empty.style.display = 'flex';
+        return;
+    }
+
+    const files = [];
+    Object.keys(data).forEach(key => {
+        files.push({ ...data[key], firebaseKey: key });
+    });
+    files.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+
+    if (files.length === 0) {
+        list.innerHTML = '';
+        list.appendChild(empty);
+        empty.style.display = 'flex';
+        return;
+    }
+
+    empty.style.display = 'none';
+    list.innerHTML = '';
+
+    files.forEach(file => {
+        const card = document.createElement('div');
+        card.className = 'file-card';
+
+        const icon = getFileIcon(file.name);
+        const sizeStr = formatFileSize(file.size);
+        const dateStr = formatDateTime(file.uploadedAt);
+        const deleteBtn = isFilesAdmin()
+            ? `<button class="file-delete-btn" onclick="deleteFile('${file.firebaseKey}')" title="${T('tip_delete')}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+               </button>`
+            : '';
+
+        card.innerHTML = `
+            <div class="file-icon">${icon}</div>
+            <div class="file-info">
+                <span class="file-name">${escapeHtml(file.name)}</span>
+                <span class="file-meta">${sizeStr} · ${escapeHtml(file.uploadedBy)} · ${dateStr}</span>
+            </div>
+            <div class="file-actions">
+                <button class="file-download-btn" onclick="downloadFile('${file.firebaseKey}')" title="${T('files_download')}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>${T('files_download')}</span>
+                </button>
+                ${deleteBtn}
+            </div>`;
+        list.appendChild(card);
+    });
+}
+
+function downloadFile(key) {
+    filesRef.child(key).once('value', (snapshot) => {
+        const file = snapshot.val();
+        if (!file || !file.data) return;
+        const link = document.createElement('a');
+        link.href = file.data;
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+}
+
+function deleteFile(key) {
+    if (!isFilesAdmin()) return;
+    if (confirm(T('files_confirm_delete'))) {
+        filesRef.child(key).remove();
+        showToast(T('files_deleted'), 'success');
+    }
+}
+
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    if (['pdf'].includes(ext)) return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><text x="7" y="19" font-size="6" fill="#EF4444" stroke="none" font-weight="bold">PDF</text></svg>';
+    if (['doc', 'docx'].includes(ext)) return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><rect x="8" y="13" width="8" height="6" rx="1"/></svg>';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}

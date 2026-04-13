@@ -500,7 +500,9 @@ td {
 tbody tr { transition: var(--transition); }
 tbody tr:hover { background: var(--primary-bg); }
 tbody tr:last-child td { border-bottom: none; }
-.task-description { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+tbody tr.row-status-working { background: #FFF1F2; }
+tbody tr.row-status-working:hover { background: #FFE4E6; }
+.task-description { max-width: 300px; white-space: pre-wrap; word-break: break-word; }
 
 /* Work Type Badge */
 .worktype-badge {
@@ -1111,4 +1113,196 @@ tr:hover .time-edit-btn {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* ===== FILES SECTION ===== */
+.btn-files {
+    background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+    color: white;
+    border: none;
+}
+
+.btn-files:hover {
+    background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139,92,246,0.3);
+}
+
+.files-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-100);
+}
+
+.files-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.files-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    color: var(--gray-800);
+    margin: 0;
+}
+
+.files-upload-area {
+    margin-bottom: 20px;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 30px 20px;
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: var(--gray-500);
+    text-align: center;
+}
+
+.file-upload-label:hover {
+    border-color: #8B5CF6;
+    background: rgba(139,92,246,0.04);
+    color: #8B5CF6;
+}
+
+.file-upload-label span {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.file-upload-label small {
+    font-size: 0.78rem;
+    color: var(--gray-400);
+}
+
+.files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.files-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 20px;
+    color: var(--gray-400);
+    text-align: center;
+}
+
+.file-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-100);
+    transition: all 0.2s ease;
+}
+
+.file-card:hover {
+    background: white;
+    border-color: var(--gray-200);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.file-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--gray-100);
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.file-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gray-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-meta {
+    font-size: 0.78rem;
+    color: var(--gray-400);
+}
+
+.file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.file-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #8B5CF6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-download-btn:hover {
+    background: #7C3AED;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(139,92,246,0.3);
+}
+
+.file-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--gray-400);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-delete-btn:hover {
+    background: #FEE2E2;
+    color: #EF4444;
+}
+
+@media (max-width: 600px) {
+    .file-card { flex-wrap: wrap; }
+    .file-actions { width: 100%; justify-content: flex-end; }
 }
