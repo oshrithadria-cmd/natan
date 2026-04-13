@@ -1653,6 +1653,16 @@ function openCalDayModal(dateStr, day) {
                     <button class="cal-type-btn cal-type-sick ${myEntry && myEntry.type === 'sick' ? 'active' : ''}" data-type="sick">${T('cal_sick')}</button>
                     <button class="cal-type-btn cal-type-other ${myEntry && myEntry.type === 'other' ? 'active' : ''}" data-type="other">${T('cal_other')}</button>
                 </div>
+                <div class="cal-date-range">
+                    <div class="cal-date-field">
+                        <label>${T('cal_from')}:</label>
+                        <input type="date" id="calDateFrom" value="${dateStr}">
+                    </div>
+                    <div class="cal-date-field">
+                        <label>${T('cal_to')}:</label>
+                        <input type="date" id="calDateTo" value="${dateStr}">
+                    </div>
+                </div>
                 <input type="text" id="calNoteInput" placeholder="${T('cal_note_ph')}" value="${myEntry ? escapeHtml(myEntry.note || '') : ''}" maxlength="50">
             </div>
             <div class="modal-actions">
@@ -1673,28 +1683,63 @@ function openCalDayModal(dateStr, day) {
             selectedType = btn.dataset.type;
         });
     });
-    // If no type was selected yet, default to vacation
     if (!myEntry) {
         overlay.querySelector('.cal-type-vacation').classList.add('active');
     }
 
-    // Save
+    // Save - supports date range
     document.getElementById('calSaveBtn').addEventListener('click', () => {
         const note = document.getElementById('calNoteInput').value.trim();
-        vacationsRef.child(dateStr).child(loggedInUser).set({
-            type: selectedType,
-            note: note,
-            updatedAt: new Date().toISOString()
-        });
+        const fromStr = document.getElementById('calDateFrom').value;
+        const toStr = document.getElementById('calDateTo').value;
+
+        if (!fromStr) return;
+        const fromDate = new Date(fromStr);
+        const toDate = toStr ? new Date(toStr) : fromDate;
+
+        if (toDate < fromDate) {
+            showToast(T('cal_date_error'), 'error');
+            return;
+        }
+
+        const updates = {};
+        const current = new Date(fromDate);
+        let dayCount = 0;
+        while (current <= toDate) {
+            const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+            updates[key + '/' + loggedInUser] = {
+                type: selectedType,
+                note: note,
+                updatedAt: new Date().toISOString()
+            };
+            current.setDate(current.getDate() + 1);
+            dayCount++;
+            if (dayCount > 60) break; // safety limit
+        }
+        vacationsRef.update(updates);
         overlay.remove();
-        showToast(T('cal_saved'), 'success');
+        showToast(T('cal_saved') + (dayCount > 1 ? ` (${dayCount} ${T('cal_days')})` : ''), 'success');
     });
 
-    // Remove
+    // Remove - removes range too
     const removeBtn = document.getElementById('calRemoveBtn');
     if (removeBtn) {
         removeBtn.addEventListener('click', () => {
-            vacationsRef.child(dateStr).child(loggedInUser).remove();
+            const fromStr = document.getElementById('calDateFrom').value;
+            const toStr = document.getElementById('calDateTo').value;
+            const fromDate = new Date(fromStr);
+            const toDate = toStr ? new Date(toStr) : fromDate;
+            const updates = {};
+            const current = new Date(fromDate);
+            let dayCount = 0;
+            while (current <= toDate) {
+                const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+                updates[key + '/' + loggedInUser] = null;
+                current.setDate(current.getDate() + 1);
+                dayCount++;
+                if (dayCount > 60) break;
+            }
+            vacationsRef.update(updates);
             overlay.remove();
             showToast(T('cal_removed'), 'success');
         });

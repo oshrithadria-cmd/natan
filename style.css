@@ -1548,6 +1548,39 @@ tr:hover .time-edit-btn {
 .cal-type-sick.active { background: #EF4444; color: white; border-color: #EF4444; }
 .cal-type-other.active { background: #F59E0B; color: white; border-color: #F59E0B; }
 
+.cal-date-range {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.cal-date-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.cal-date-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-500);
+    margin-bottom: 0;
+}
+.cal-date-field input[type="date"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 2px solid var(--gray-200);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--gray-800);
+    transition: border-color 0.2s;
+}
+.cal-date-field input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
 .cal-modal-form input[type="text"] {
     width: 100%;
     padding: 10px 14px;
