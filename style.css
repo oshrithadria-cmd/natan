@@ -500,8 +500,8 @@ td {
 tbody tr { transition: var(--transition); }
 tbody tr:hover { background: var(--primary-bg); }
 tbody tr:last-child td { border-bottom: none; }
-tbody tr.row-status-working { background: #FFF1F2; }
-tbody tr.row-status-working:hover { background: #FFE4E6; }
+tbody tr.row-status-working { background: #BFDBFE; }
+tbody tr.row-status-working:hover { background: #93C5FD; }
 .task-description { max-width: 300px; white-space: pre-wrap; word-break: break-word; }
 
 /* Work Type Badge */
