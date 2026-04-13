@@ -24,6 +24,7 @@ const db = firebase.database();
 const tasksRef = db.ref('tasks');
 const usersRef = db.ref('users');
 const filesRef = db.ref('files');
+const vacationsRef = db.ref('vacations');
 
 // Default users (seeded on first load)
 const DEFAULT_USERS = ['אשד', 'אושרית', 'נתנאל', 'אלון בנג\'י', 'סאמר'];
@@ -1492,4 +1493,210 @@ function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ===== VACATION CALENDAR =====
+
+let calYear, calMonth; // current displayed month
+let calVacations = {}; // { "2026-02-07": { "נתנאל": { type: "vacation", note: "..." }, ... } }
+let calListenerStarted = false;
+
+const CAL_TYPES = ['vacation', 'sick', 'other'];
+const CAL_TYPE_LABELS = {
+    vacation: 'cal_vacation',
+    sick: 'cal_sick',
+    other: 'cal_other'
+};
+
+function toggleCalendarSection() {
+    const section = document.getElementById('calendarSection');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        const now = new Date();
+        calYear = now.getFullYear();
+        calMonth = now.getMonth();
+        startCalendarListener();
+        renderCalendar();
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function startCalendarListener() {
+    if (calListenerStarted) return;
+    calListenerStarted = true;
+    vacationsRef.on('value', (snapshot) => {
+        calVacations = snapshot.val() || {};
+        renderCalendar();
+    });
+}
+
+function calPrevMonth() {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+}
+
+function calNextMonth() {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+}
+
+function calGoToday() {
+    const now = new Date();
+    calYear = now.getFullYear();
+    calMonth = now.getMonth();
+    renderCalendar();
+}
+
+function getHebrewMonthName(month, year) {
+    return new Date(year, month).toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+}
+
+function renderCalendar() {
+    const label = document.getElementById('calMonthLabel');
+    label.textContent = getHebrewMonthName(calMonth, calYear);
+
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    // Day headers (Sun-Sat)
+    const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+    dayNames.forEach(d => {
+        const header = document.createElement('div');
+        header.className = 'cal-day-header';
+        header.textContent = d;
+        grid.appendChild(header);
+    });
+
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    // Empty cells before first day
+    for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'cal-day cal-day-empty';
+        grid.appendChild(empty);
+    }
+
+    // Day cells
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const cell = document.createElement('div');
+        cell.className = 'cal-day';
+        if (dateStr === todayStr) cell.classList.add('cal-day-today');
+
+        const dayNum = document.createElement('span');
+        dayNum.className = 'cal-day-num';
+        dayNum.textContent = day;
+        cell.appendChild(dayNum);
+
+        // Show vacations for this date
+        const dateData = calVacations[dateStr];
+        if (dateData) {
+            const entries = document.createElement('div');
+            entries.className = 'cal-entries';
+            Object.keys(dateData).forEach(user => {
+                const entry = dateData[user];
+                const tag = document.createElement('div');
+                tag.className = `cal-entry cal-entry-${entry.type || 'vacation'}`;
+                tag.textContent = user + (entry.note ? ': ' + entry.note : '');
+                tag.title = `${user} - ${T(CAL_TYPE_LABELS[entry.type] || 'cal_vacation')}${entry.note ? ' - ' + entry.note : ''}`;
+                entries.appendChild(tag);
+            });
+            cell.appendChild(entries);
+        }
+
+        cell.addEventListener('click', () => openCalDayModal(dateStr, day));
+        grid.appendChild(cell);
+    }
+}
+
+// Modal for adding/removing vacation
+function openCalDayModal(dateStr, day) {
+    const dateData = calVacations[dateStr] || {};
+    const myEntry = dateData[loggedInUser];
+
+    // Build a simple modal
+    const existing = document.getElementById('calDayModal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay visible';
+    overlay.id = 'calDayModal';
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+
+    const displayDate = new Date(dateStr).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    const otherEntries = Object.keys(dateData)
+        .filter(u => u !== loggedInUser)
+        .map(u => {
+            const e = dateData[u];
+            return `<div class="cal-modal-entry cal-entry-${e.type || 'vacation'}"><strong>${escapeHtml(u)}</strong> - ${T(CAL_TYPE_LABELS[e.type] || 'cal_vacation')}${e.note ? ': ' + escapeHtml(e.note) : ''}</div>`;
+        }).join('');
+
+    overlay.innerHTML = `
+        <div class="modal cal-modal">
+            <div class="modal-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <h3>${displayDate}</h3>
+            ${otherEntries ? '<div class="cal-modal-others">' + otherEntries + '</div>' : ''}
+            <div class="cal-modal-form">
+                <label>${T('cal_type')}:</label>
+                <div class="cal-type-buttons">
+                    <button class="cal-type-btn cal-type-vacation ${myEntry && myEntry.type === 'vacation' ? 'active' : ''}" data-type="vacation">${T('cal_vacation')}</button>
+                    <button class="cal-type-btn cal-type-sick ${myEntry && myEntry.type === 'sick' ? 'active' : ''}" data-type="sick">${T('cal_sick')}</button>
+                    <button class="cal-type-btn cal-type-other ${myEntry && myEntry.type === 'other' ? 'active' : ''}" data-type="other">${T('cal_other')}</button>
+                </div>
+                <input type="text" id="calNoteInput" placeholder="${T('cal_note_ph')}" value="${myEntry ? escapeHtml(myEntry.note || '') : ''}" maxlength="50">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="calSaveBtn">${T('cal_save')}</button>
+                ${myEntry ? `<button class="btn btn-danger" id="calRemoveBtn">${T('cal_remove')}</button>` : ''}
+                <button class="btn btn-secondary" onclick="document.getElementById('calDayModal').remove()">${T('btn_cancel')}</button>
+            </div>
+        </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Type button selection
+    let selectedType = myEntry ? myEntry.type : 'vacation';
+    overlay.querySelectorAll('.cal-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            overlay.querySelectorAll('.cal-type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedType = btn.dataset.type;
+        });
+    });
+    // If no type was selected yet, default to vacation
+    if (!myEntry) {
+        overlay.querySelector('.cal-type-vacation').classList.add('active');
+    }
+
+    // Save
+    document.getElementById('calSaveBtn').addEventListener('click', () => {
+        const note = document.getElementById('calNoteInput').value.trim();
+        vacationsRef.child(dateStr).child(loggedInUser).set({
+            type: selectedType,
+            note: note,
+            updatedAt: new Date().toISOString()
+        });
+        overlay.remove();
+        showToast(T('cal_saved'), 'success');
+    });
+
+    // Remove
+    const removeBtn = document.getElementById('calRemoveBtn');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            vacationsRef.child(dateStr).child(loggedInUser).remove();
+            overlay.remove();
+            showToast(T('cal_removed'), 'success');
+        });
+    }
 }

@@ -144,6 +144,19 @@ const translations = {
         files_no_permission: 'אין לך הרשאה להעלות קבצים',
         files_confirm_delete: 'האם למחוק את הקובץ?',
         files_deleted: 'הקובץ נמחק',
+        // Calendar
+        btn_calendar: 'לוח חופשות',
+        cal_title: 'לוח חופשות',
+        cal_today: 'היום',
+        cal_vacation: 'חופשה',
+        cal_sick: 'מחלה',
+        cal_other: 'אחר',
+        cal_type: 'סוג היעדרות',
+        cal_note_ph: 'הערה (לא חובה)...',
+        cal_save: 'שמור',
+        cal_remove: 'הסר',
+        cal_saved: 'עודכן בהצלחה',
+        cal_removed: 'ההיעדרות הוסרה',
     },
 
     en: {
@@ -276,6 +289,19 @@ const translations = {
         files_no_permission: 'You do not have permission to upload files',
         files_confirm_delete: 'Delete this file?',
         files_deleted: 'File deleted',
+        // Calendar
+        btn_calendar: 'Vacation Board',
+        cal_title: 'Vacation Board',
+        cal_today: 'Today',
+        cal_vacation: 'Vacation',
+        cal_sick: 'Sick',
+        cal_other: 'Other',
+        cal_type: 'Absence type',
+        cal_note_ph: 'Note (optional)...',
+        cal_save: 'Save',
+        cal_remove: 'Remove',
+        cal_saved: 'Updated successfully',
+        cal_removed: 'Absence removed',
     },
 
     ru: {
@@ -408,6 +434,19 @@ const translations = {
         files_no_permission: 'У вас нет разрешения на загрузку файлов',
         files_confirm_delete: 'Удалить этот файл?',
         files_deleted: 'Файл удален',
+        // Calendar
+        btn_calendar: 'Доска отпусков',
+        cal_title: 'Доска отпусков',
+        cal_today: 'Сегодня',
+        cal_vacation: 'Отпуск',
+        cal_sick: 'Больничный',
+        cal_other: 'Другое',
+        cal_type: 'Тип отсутствия',
+        cal_note_ph: 'Заметка (необязательно)...',
+        cal_save: 'Сохранить',
+        cal_remove: 'Удалить',
+        cal_saved: 'Успешно обновлено',
+        cal_removed: 'Отсутствие удалено',
     },
 
     am: {
@@ -540,6 +579,19 @@ const translations = {
         files_no_permission: 'ፋይሎችን ለመጫን ፈቃድ የለዎትም',
         files_confirm_delete: 'ይህን ፋይል ይሰርዙ?',
         files_deleted: 'ፋይሉ ተሰርዟል',
+        // Calendar
+        btn_calendar: 'የእረፍት ሰሌዳ',
+        cal_title: 'የእረፍት ሰሌዳ',
+        cal_today: 'ዛሬ',
+        cal_vacation: 'እረፍት',
+        cal_sick: 'ህመም',
+        cal_other: 'ሌላ',
+        cal_type: 'የቀሪ ዓይነት',
+        cal_note_ph: 'ማስታወሻ (አማራጭ)...',
+        cal_save: 'አስቀምጥ',
+        cal_remove: 'አስወግድ',
+        cal_saved: 'በተሳካ ሁኔታ ተዘምኗል',
+        cal_removed: 'ቀሪው ተወግዷል',
     }
 };
 

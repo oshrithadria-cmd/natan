@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>יומן ניהול משימות - בנייה</title>
-    <link rel="stylesheet" href="style.css?v=2.5">
+    <link rel="stylesheet" href="style.css?v=2.6">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -200,6 +200,10 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         <span data-i18n="btn_files">תוספי עזר</span>
                     </button>
+                    <button class="btn btn-calendar" onclick="toggleCalendarSection()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span data-i18n="btn_calendar">לוח חופשות</span>
+                    </button>
                 </div>
             </section>
 
@@ -283,6 +287,33 @@
                 </div>
             </section>
 
+            <!-- Calendar Section -->
+            <section class="calendar-section" id="calendarSection" style="display:none;">
+                <div class="calendar-header">
+                    <h2>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span data-i18n="cal_title">לוח חופשות</span>
+                    </h2>
+                    <div class="calendar-controls">
+                        <button class="cal-nav-btn" onclick="calPrevMonth()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <span class="cal-month-label" id="calMonthLabel"></span>
+                        <button class="cal-nav-btn" onclick="calNextMonth()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                        <button class="cal-nav-btn cal-today-btn" onclick="calGoToday()" data-i18n="cal_today">היום</button>
+                        <button class="btn btn-secondary summary-close" onclick="toggleCalendarSection()">✕</button>
+                    </div>
+                </div>
+                <div class="cal-legend">
+                    <span class="cal-legend-item"><span class="cal-dot cal-dot-vacation"></span><span data-i18n="cal_vacation">חופשה</span></span>
+                    <span class="cal-legend-item"><span class="cal-dot cal-dot-sick"></span><span data-i18n="cal_sick">מחלה</span></span>
+                    <span class="cal-legend-item"><span class="cal-dot cal-dot-other"></span><span data-i18n="cal_other">אחר</span></span>
+                </div>
+                <div class="cal-grid" id="calGrid"></div>
+            </section>
+
             <!-- Table -->
             <section class="table-section">
                 <div class="table-wrapper">
@@ -351,7 +382,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
-    <script src="lang.js?v=2.5"></script>
-    <script src="script.js?v=2.5"></script>
+    <script src="lang.js?v=2.6"></script>
+    <script src="script.js?v=2.6"></script>
 </body>
 </html>
