@@ -321,6 +321,7 @@ function showApp() {
     setDefaultDate();
     startFirebaseListener();
     startTimeTrackingTimer();
+    startWeeklyBannerListener();
     setupFilterButtons();
     setupUserFilterButtons();
     // Auto-select "My Tasks" on login
@@ -1529,6 +1530,85 @@ function startCalendarListener() {
     vacationsRef.on('value', (snapshot) => {
         calVacations = snapshot.val() || {};
         renderCalendar();
+        renderWeeklyBanner();
+    });
+}
+
+function startWeeklyBannerListener() {
+    if (calListenerStarted) return;
+    vacationsRef.on('value', (snapshot) => {
+        calVacations = snapshot.val() || {};
+        calListenerStarted = true;
+        renderWeeklyBanner();
+    });
+}
+
+function renderWeeklyBanner() {
+    const banner = document.getElementById('weeklyBanner');
+    const list = document.getElementById('weeklyBannerList');
+    if (!banner || !list) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(today);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const entries = [];
+    const current = new Date(today);
+    while (current < weekEnd) {
+        const key = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`;
+        const dateData = calVacations[key];
+        if (dateData) {
+            Object.keys(dateData).forEach(user => {
+                const e = dateData[user];
+                entries.push({
+                    date: key,
+                    user: user,
+                    type: e.type || 'vacation',
+                    note: e.note || ''
+                });
+            });
+        }
+        current.setDate(current.getDate() + 1);
+    }
+
+    if (entries.length === 0) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    banner.style.display = 'block';
+
+    // Group by user
+    const grouped = {};
+    entries.forEach(e => {
+        if (!grouped[e.user]) grouped[e.user] = [];
+        grouped[e.user].push(e);
+    });
+
+    list.innerHTML = '';
+    Object.keys(grouped).sort().forEach(user => {
+        const userEntries = grouped[user];
+        const dates = userEntries.map(e => {
+            const d = new Date(e.date);
+            return d.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric' });
+        });
+        const type = userEntries[0].type;
+        const note = userEntries[0].note;
+        const typeLabel = T(CAL_TYPE_LABELS[type] || 'cal_vacation');
+
+        const item = document.createElement('div');
+        item.className = `weekly-item weekly-item-${type}`;
+
+        let datesText;
+        if (dates.length === 1) {
+            datesText = dates[0];
+        } else {
+            datesText = dates[0] + ' - ' + dates[dates.length - 1];
+        }
+
+        item.innerHTML = `<strong>${escapeHtml(user)}</strong> · ${typeLabel} · ${datesText}${note ? ' · ' + escapeHtml(note) : ''}`;
+        list.appendChild(item);
     });
 }
 

@@ -1307,6 +1307,54 @@ tr:hover .time-edit-btn {
     .file-actions { width: 100%; justify-content: flex-end; }
 }
 
+/* ===== WEEKLY BANNER ===== */
+.weekly-banner {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    border: 2px solid #F59E0B;
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.weekly-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #92400E;
+    margin-bottom: 10px;
+}
+
+.weekly-banner-header svg {
+    stroke: #92400E;
+}
+
+.weekly-banner-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.weekly-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: white;
+    font-weight: 500;
+}
+
+.weekly-item-vacation { background: #3B82F6; }
+.weekly-item-sick { background: #EF4444; }
+.weekly-item-other { background: #F59E0B; color: #78350F; }
+
+.weekly-item strong {
+    font-weight: 700;
+}
+
 /* ===== CALENDAR SECTION ===== */
 .btn-calendar {
     background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);

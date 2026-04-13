@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>יומן ניהול משימות - בנייה</title>
-    <link rel="stylesheet" href="style.css?v=2.7">
+    <link rel="stylesheet" href="style.css?v=2.8">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -114,6 +114,15 @@
         </header>
 
         <main class="main-content">
+            <!-- Weekly Announcements -->
+            <section class="weekly-banner" id="weeklyBanner" style="display:none;">
+                <div class="weekly-banner-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span data-i18n="weekly_title">היעדרויות לשבוע הקרוב</span>
+                </div>
+                <div class="weekly-banner-list" id="weeklyBannerList"></div>
+            </section>
+
             <!-- Form -->
             <section class="form-section">
                 <div class="section-header"><h2><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span data-i18n="form_title">הוספת משימה חדשה</span></h2></div>
@@ -382,7 +391,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
-    <script src="lang.js?v=2.7"></script>
-    <script src="script.js?v=2.7"></script>
+    <script src="lang.js?v=2.8"></script>
+    <script src="script.js?v=2.8"></script>
 </body>
 </html>
