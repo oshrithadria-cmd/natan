@@ -29,6 +29,13 @@ const vacationsRef = db.ref('vacations');
 // Default users (seeded on first load)
 const DEFAULT_USERS = ['אשד', 'אושרית', 'נתנאל', 'אלון בנג\'י', 'סאמר'];
 let allUsers = [];
+let allUsersMap = {}; // name -> firebase key (for management)
+
+// Admins with full management permissions (backend-like control)
+const ADMINS = ['נתנאל'];
+function isAdmin() {
+    return ADMINS.includes(loggedInUser);
+}
 
 // State
 let tasks = [];
@@ -110,6 +117,7 @@ function startFirebaseListener() {
         }
         renderTasks();
         updateStats();
+        updateAdminTasksCount();
         // Refresh summary if open
         const summarySection = document.getElementById('summarySection');
         if (summarySection && summarySection.style.display !== 'none') {
@@ -154,7 +162,9 @@ function updateTaskInFirebase(id, updates) {
 function startUsersListener() {
     usersRef.on('value', (snapshot) => {
         const data = snapshot.val();
+        allUsersMap = {};
         if (data) {
+            Object.keys(data).forEach(key => { allUsersMap[data[key]] = key; });
             allUsers = Object.values(data).sort((a, b) => a.localeCompare(b, 'he'));
         } else {
             // Seed default users on first run
@@ -162,6 +172,7 @@ function startUsersListener() {
             seedDefaultUsers();
         }
         rebuildUserLists();
+        renderAdminParticipants();
     }, (error) => {
         // Firebase error - fallback to defaults so login still works
         console.error('Users load error:', error);
@@ -329,6 +340,9 @@ function showApp() {
     document.querySelectorAll('.user-filter-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.user === 'mine');
     });
+    // Show admin controls only for admins
+    const adminBtn = document.getElementById('adminBtn');
+    if (adminBtn) adminBtn.style.display = isAdmin() ? 'inline-flex' : 'none';
 }
 
 function logout() {
@@ -1494,6 +1508,92 @@ function formatFileSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ===== ADMIN / PERMISSIONS PANEL =====
+
+function toggleAdminSection() {
+    const section = document.getElementById('adminSection');
+    if (!section) return;
+    if (!isAdmin()) {
+        showToast(T('admin_no_permission'), 'error');
+        return;
+    }
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        renderAdminParticipants();
+        updateAdminTasksCount();
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function renderAdminParticipants() {
+    const list = document.getElementById('adminParticipantsList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!allUsers.length) {
+        list.innerHTML = `<div class="admin-empty">${T('admin_no_participants')}</div>`;
+        return;
+    }
+    allUsers.forEach(name => {
+        const isProtected = ADMINS.includes(name);
+        const row = document.createElement('div');
+        row.className = 'admin-participant';
+        const removeBtn = isProtected
+            ? ''
+            : `<button class="admin-remove-btn" onclick="removeParticipant('${escapeJs(name)}')" title="${T('admin_remove_participant')}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+               </button>`;
+        row.innerHTML = `
+            <span class="admin-participant-avatar">${escapeHtml(name.charAt(0))}</span>
+            <span class="admin-participant-name">${escapeHtml(name)}${isProtected ? ' <span class="admin-badge">ADMIN</span>' : ''}</span>
+            ${removeBtn}`;
+        list.appendChild(row);
+    });
+}
+
+function addParticipant() {
+    if (!isAdmin()) { showToast(T('admin_no_permission'), 'error'); return; }
+    const input = document.getElementById('adminNewParticipant');
+    const name = input.value.trim();
+    if (!name) { showToast(T('admin_participant_empty'), 'error'); input.focus(); return; }
+    if (allUsers.includes(name)) { showToast(T('admin_participant_exists'), 'error'); return; }
+    addUserToFirebase(name).then(() => {
+        input.value = '';
+        showToast(T('admin_participant_added'), 'success');
+    });
+}
+
+function removeParticipant(name) {
+    if (!isAdmin()) { showToast(T('admin_no_permission'), 'error'); return; }
+    if (ADMINS.includes(name)) return; // never remove an admin
+    if (!confirm(T('admin_confirm_remove') + '\n\n' + name)) return;
+    const key = allUsersMap[name];
+    if (!key) return;
+    usersRef.child(key).remove().then(() => {
+        showToast(T('admin_participant_removed'), 'success');
+    });
+}
+
+function updateAdminTasksCount() {
+    const el = document.getElementById('adminTasksCount');
+    if (el) el.textContent = tasks.length;
+}
+
+function adminDeleteAllTasks() {
+    if (!isAdmin()) { showToast(T('admin_no_permission'), 'error'); return; }
+    if (tasks.length === 0) return;
+    if (!confirm(T('admin_confirm_delete_all'))) return;
+    tasksRef.remove().then(() => {
+        showToast(T('admin_all_tasks_deleted'), 'success');
+    });
+}
+
+// Escape a string for safe use inside a single-quoted JS string in inline handlers
+function escapeJs(str) {
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
 // ===== VACATION CALENDAR =====

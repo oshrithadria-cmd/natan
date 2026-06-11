@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>יומן ניהול משימות - בנייה</title>
-    <link rel="stylesheet" href="style.css?v=2.8">
+    <link rel="stylesheet" href="style.css?v=2.9">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -213,6 +213,10 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         <span data-i18n="btn_calendar">לוח חופשות</span>
                     </button>
+                    <button class="btn btn-admin" id="adminBtn" onclick="toggleAdminSection()" style="display:none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                        <span data-i18n="btn_admin">הרשאות</span>
+                    </button>
                 </div>
             </section>
 
@@ -323,6 +327,54 @@
                 <div class="cal-grid" id="calGrid"></div>
             </section>
 
+            <!-- Admin / Permissions Section -->
+            <section class="admin-section" id="adminSection" style="display:none;">
+                <div class="admin-header">
+                    <h2>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                        <span data-i18n="admin_title">ניהול והרשאות</span>
+                    </h2>
+                    <button class="btn btn-secondary summary-close" onclick="toggleAdminSection()">✕</button>
+                </div>
+
+                <!-- Participants management -->
+                <div class="admin-block">
+                    <div class="admin-block-head">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <div>
+                            <h3 data-i18n="admin_participants_title">ניהול משתתפים</h3>
+                            <small data-i18n="admin_participants_hint">הוספה והסרה של עובדים מהמערכת</small>
+                        </div>
+                    </div>
+                    <div class="admin-add-row">
+                        <input type="text" id="adminNewParticipant" data-i18n-ph="admin_add_participant_ph" placeholder="שם משתתף חדש..." maxlength="30" onkeydown="if(event.key==='Enter'){event.preventDefault();addParticipant();}">
+                        <button class="btn btn-primary" onclick="addParticipant()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            <span data-i18n="admin_add_participant_btn">הוסף משתתף</span>
+                        </button>
+                    </div>
+                    <div class="admin-participants-list" id="adminParticipantsList"></div>
+                </div>
+
+                <!-- Tasks management -->
+                <div class="admin-block">
+                    <div class="admin-block-head">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        <div>
+                            <h3 data-i18n="admin_tasks_title">ניהול משימות</h3>
+                            <small data-i18n="admin_tasks_hint">כמנהל יש לך שליטה מלאה: הוספה, עריכה ומחיקה של כל משימה בטבלה.</small>
+                        </div>
+                    </div>
+                    <div class="admin-tasks-row">
+                        <span class="admin-tasks-total"><span data-i18n="admin_tasks_total">סה"כ משימות במערכת</span>: <strong id="adminTasksCount">0</strong></span>
+                        <button class="btn btn-danger" onclick="adminDeleteAllTasks()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            <span data-i18n="admin_delete_all_tasks">מחק את כל המשימות</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             <!-- Table -->
             <section class="table-section">
                 <div class="table-wrapper">
@@ -391,7 +443,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
-    <script src="lang.js?v=2.8"></script>
-    <script src="script.js?v=2.8"></script>
+    <script src="lang.js?v=2.9"></script>
+    <script src="script.js?v=2.9"></script>
 </body>
 </html>
